@@ -282,6 +282,12 @@ int check_des_options(int argc, char **argv, ssl_t *ssl) {
         ++i;
     }
 
+    if (ssl->message == NULL
+            && read_fd(STDIN_FILENO, (uint8_t **)&ssl->message, &ssl->message_len) == -1) {
+        free_ssl(ssl);
+        return -1;
+    }
+
     return 0;
 }
 
