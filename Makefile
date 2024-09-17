@@ -1,7 +1,7 @@
 NAME =		ft_ssl
 
 CC =		gcc
-CFLAGS =	-Wall -Werror -Wextra -Wunused
+CFLAGS =	-Wall -Werror -Wextra -Wunused -g3
 
 FT_DPRINTF_FOLDER	=	src/ft_dprintf
 INCLUDES =	-Iinclude -I$(FT_DPRINTF_FOLDER)/include
@@ -14,8 +14,9 @@ SRCS_FILE =	main.c \
 			error.c	\
 			display.c	\
 			utils.c	\
-			md5.c	\
-			sha256.c
+			algo/md5.c	\
+			algo/sha256.c	\
+			algo/base64.c
 
 
 OBJ_FILE =	$(SRCS_FILE:.c=.o)
@@ -36,11 +37,12 @@ $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.c | $(OBJS_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 $(OBJS_DIR):
-	mkdir $(OBJS_DIR)
+	mkdir -p $(OBJS_DIR)/algo
 
 clean:
 	@make clean -C $(FT_DPRINTF_FOLDER)
 	@$(RM) $(OBJS)
+	@if [ -d "$(OBJS_DIR)/algo" ]; then rmdir $(OBJS_DIR)/algo; fi
 	@if [ -d "$(OBJS_DIR)" ]; then rmdir $(OBJS_DIR); fi
 
 fclean: clean

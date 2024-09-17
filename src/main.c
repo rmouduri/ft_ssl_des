@@ -10,7 +10,13 @@ int main(int argc, char **argv) {
         .algo = -1,
         .options = 0,
         .fd = STDIN_FILENO,
-        .ssl_inputs = NULL
+        .ssl_inputs = NULL,
+        .message = NULL,
+        .message_len = 0,
+        .key = NULL,
+        .password = NULL,
+        .salt = NULL,
+        .init_vector = NULL
     };
 
     if (check_args(argc, argv, &ssl) == -1) {
@@ -22,17 +28,26 @@ int main(int argc, char **argv) {
         &ft_sha256
     };
 
-    ssl_input_t *tmp = ssl.ssl_inputs;
-    while (tmp) {
-        if (tmp->ssl_str || (!tmp->ssl_str && !tmp->len)) {
-            if ((tmp->hash = hash_fun_ptr[ssl.algo](tmp->ssl_str, tmp->len)) == NULL) {
-                tmp = tmp->next;
-                continue;
+    if (ssl.algo == MD5 || ssl.algo == SHA256) {
+        ssl_input_t *tmp = ssl.ssl_inputs;
+        while (tmp) {
+            if (tmp->ssl_str || (!tmp->ssl_str && !tmp->len)) {
+                if ((tmp->hash = hash_fun_ptr[ssl.algo](tmp->ssl_str, tmp->len)) == NULL) {
+                    tmp = tmp->next;
+                    continue;
+                }
             }
-        }
 
-        display(tmp, ssl.algo, ssl.options, ssl.fd);
-        tmp = tmp->next;
+            display(tmp, ssl.algo, ssl.options, ssl.fd);
+            tmp = tmp->next;
+        }
+    } else if (ssl.algo == BASE64) {
+        char *output = ft_base64(ssl.message, ssl.message_len, ssl.options);
+
+        if (output) {
+            ft_dprintf(ssl.fd, "%s", output);
+            free(output);
+        }
     }
 
     free_ssl(&ssl);

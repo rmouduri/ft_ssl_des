@@ -104,6 +104,14 @@ static int check_command(const char *command, ssl_t *ssl) {
         ssl->algo = MD5;
     } else if (ft_strcmp(SHA256_COMMAND_ARG, command) == 0) {
         ssl->algo = SHA256;
+    } else if (ft_strcmp(BASE64_COMMAND_ARG, command) == 0) {
+        ssl->algo = BASE64;
+    } else if (ft_strcmp(DES_COMMAND_ARG, command) == 0) {
+        ssl->algo = DES;
+    } else if (ft_strcmp(DES_ECB_COMMAND_ARG, command) == 0) {
+        ssl->algo = DES_ECB;
+    } else if (ft_strcmp(DES_CBC_COMMAND_ARG, command) == 0) {
+        ssl->algo = DES_CBC;
     } else if (ft_strcmp(HELP_ARG, command) == 0) {
         print_help();
         return -1;
@@ -115,7 +123,7 @@ static int check_command(const char *command, ssl_t *ssl) {
     return 0;
 }
 
-int check_options(int argc, char **argv, ssl_t *ssl) {
+int check_md5_sha256_options(int argc, char **argv, ssl_t *ssl) {
     int i = 2;
 
     while (i < argc) {
@@ -163,6 +171,120 @@ int check_options(int argc, char **argv, ssl_t *ssl) {
     return 0;
 }
 
+int check_base64_options(int argc, char **argv, ssl_t *ssl) {
+    int i = 2;
+
+    while (i < argc) {
+        if (ft_strcmp(HELP_ARG, argv[i]) == 0) {
+            print_help();
+            free_ssl(ssl);
+            return -1;
+        } else if (ft_strcmp(DECODE_MODE_ARG, argv[i]) == 0) {
+            if (ssl->options & ENCODE_MODE_OPTION) {
+                print_encode_decode_error();
+                free_ssl(ssl);
+                return -1;
+            }
+            ssl->options |= DECODE_MODE_OPTION;
+        } else if (ft_strcmp(ENCODE_MODE_ARG, argv[i]) == 0) {
+            if (ssl->options & DECODE_MODE_OPTION) {
+                print_encode_decode_error();
+                free_ssl(ssl);
+                return -1;
+            }
+            ssl->options |= ENCODE_MODE_OPTION;
+        } else if (ft_strcmp(INPUT_FILE_ARG, argv[i]) == 0) {
+            int fd;
+            if (i + 1 >= argc
+                    || (fd = open(argv[++i], O_RDONLY)) == -1
+                    || read_fd(fd, (uint8_t **)&ssl->message, &ssl->message_len) == -1) {
+                free_ssl(ssl);
+                return -1;
+            }
+            close(fd);
+        } else if (ft_strcmp(OUTPUT_FILE_ARG, argv[i]) == 0) {
+            if (i + 1 >= argc || (ssl->fd = open(argv[++i], O_WRONLY | O_CREAT, 0666)) == -1) {
+                free_ssl(ssl);
+                return -1;
+            }
+        } else {
+            break;
+        }
+
+        ++i;
+    }
+
+    if (ssl->message == NULL
+            && read_fd(STDIN_FILENO, (uint8_t **)&ssl->message, &ssl->message_len) == -1) {
+        free_ssl(ssl);
+        return -1;
+    }
+
+    return 0;
+}
+
+int check_des_options(int argc, char **argv, ssl_t *ssl) {
+    int i = 2;
+
+    while (i < argc) {
+        if (ft_strcmp(HELP_ARG, argv[i]) == 0) {
+            print_help();
+            free_ssl(ssl);
+            return -1;
+        } else if (ft_strcmp(DE_ENCODE_IN_OUTPUT_BASE64_ARG, argv[i]) == 0) {
+            ssl->options |= DE_ENCODE_IN_OUTPUT_BASE64_OPTION;
+        } else if (ft_strcmp(DECRYPT_MODE_ARG, argv[i]) == 0) {
+            ssl->options |= DECRYPT_MODE_OPTION;
+        } else if (ft_strcmp(ENCRYPT_MODE_ARG, argv[i]) == 0) {
+            ssl->options |= ENCRYPT_MODE_OPTION;
+        } else if (ft_strcmp(INPUT_MESSAGE_FILE_ARG, argv[i]) == 0) {
+            int fd;
+            if (i + 1 >= argc
+                    || (fd = open(argv[++i], O_RDONLY)) == -1
+                    || read_fd(fd, (uint8_t **)&ssl->message, &ssl->message_len) == -1) {
+                free_ssl(ssl);
+                return -1;
+            }
+            close(fd);
+        } else if (ft_strcmp(OUTPUT_FILE_ARG, argv[i]) == 0) {
+            if (i + 1 >= argc || (ssl->fd = open(argv[++i], O_WRONLY | O_CREAT, 0666)) == -1) {
+                free_ssl(ssl);
+                return -1;
+            }
+        } else if (ft_strcmp(KEY_HEX_ARG, argv[i]) == 0) {
+            if (i + 1 >= argc) {
+                write(STDERR_FILENO, "Missing hex key argument.\n", ft_strlen("Missing hex key argument.\n")); 
+                return -1;
+            }
+            ssl->key = argv[++i];
+        } else if (ft_strcmp(PASSWORD_ASCII_ARG, argv[i]) == 0) {
+            if (i + 1 >= argc) {
+                write(STDERR_FILENO, "Missing password argument.\n", ft_strlen("Missing password argument.\n")); 
+                return -1;
+            }
+            ssl->password = argv[++i];
+        } else if (ft_strcmp(SALT_HEX_ARG, argv[i]) == 0) {
+            if (i + 1 >= argc) {
+                write(STDERR_FILENO, "Missing hex salt argument.\n", ft_strlen("Missing hex salt argument.\n")); 
+                return -1;
+            }
+            ssl->salt = argv[++i];
+        } else if (ft_strcmp(INIT_VECTOR_HEX_ARG, argv[i]) == 0) {
+            if (i + 1 >= argc) {
+                write(STDERR_FILENO, "Missing hex initialization vector argument.\n", ft_strlen("Missing hex initialization vector argument.\n")); 
+                return -1;
+            }
+            ssl->init_vector = argv[++i];
+        } else {
+            break;
+        }
+
+        ++i;
+    }
+
+    return 0;
+}
+
 int check_args(int argc, char **argv, ssl_t *ssl) {
     if (argc < 2) {
         print_usage();
@@ -173,7 +295,16 @@ int check_args(int argc, char **argv, ssl_t *ssl) {
         return -1;
     }
 
-    if (check_options(argc, argv, ssl) == -1) {
+    int (*check_options[6])(int, char **, ssl_t *) = {
+        &check_md5_sha256_options, // MD5
+        &check_md5_sha256_options, // SHA256
+        &check_base64_options, // BASE64
+        &check_des_options, // DES
+        &check_des_options, // DES-ECB
+        &check_des_options  // DES-CBC
+    };
+
+    if (check_options[ssl->algo](argc, argv, ssl) == -1) {
         return -1;
     }
 

@@ -64,4 +64,8 @@ void free_ssl(ssl_t *ssl) {
 	if (ssl->fd != -1 && ssl->fd != STDIN_FILENO) {
 		close(ssl->fd);
 	}
+
+	if (ssl->message) {
+		free(ssl->message);
+	}
 }

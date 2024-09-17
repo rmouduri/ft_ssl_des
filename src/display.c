@@ -97,7 +97,7 @@ static void print_no_esc_char(uint8_t *input, int fd) {
 }
 
 static void display_arg_input(const ssl_input_t *input, ssl_encrypt_algo_t algo, ssl_option_t options, int fd) {
-    const char algo_strings[2][16] = ALGO_STRING;
+    const char algo_strings[6][16] = ALGO_STRING;
 
     if (!(options & QUIET_MODE_OPTION) && !(options & REVERSE_MODE_OPTION)) {
         ft_dprintf(fd, "%s (\"", algo_strings[algo]);
@@ -117,7 +117,7 @@ static void display_arg_input(const ssl_input_t *input, ssl_encrypt_algo_t algo,
 }
 
 static void display_file_input(const ssl_input_t *input, ssl_encrypt_algo_t algo, ssl_option_t options, int fd) {
-    const char algo_strings[2][16] = ALGO_STRING;
+    const char algo_strings[6][16] = ALGO_STRING;
 
     if (!(options & QUIET_MODE_OPTION) && !(options & REVERSE_MODE_OPTION)) {
         ft_dprintf(fd, "%s (", algo_strings[algo]);

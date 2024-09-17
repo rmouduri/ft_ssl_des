@@ -25,3 +25,7 @@ void print_read_error(const char *function) {
     write(STDERR_FILENO, function, ft_strlen(function));
     write(STDERR_FILENO, "\n", 1);
 }
+
+void print_encode_decode_error(void) {
+    write(STDERR_FILENO, FT_SSL_BASE64_ENCODE_DECODE_ERROR, ft_strlen(FT_SSL_BASE64_ENCODE_DECODE_ERROR));
+}
