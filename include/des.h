@@ -1,6 +1,11 @@
 #ifndef _DES_H_
 # define _DES_H_
 
+# define LEFT_SHIFTS { \
+    1, 1, 2, 2, 2, 2, 1, 1, \
+    2, 2, 2, 2, 1, 1, 2, 2 \
+}
+
 # define INITIAL_BLOCK_PERMUTATION_TABLE { \
     58, 50, 42, 34, 26, 18, 10,  2, \
     60, 52, 44, 36, 28, 20, 12,  4, \
@@ -106,5 +111,15 @@
     19, 13, 30,  6, \
     22, 11,  4, 25 \
 }
+
+typedef struct ft_des_s {
+    uint8_t     *padded_input;
+    uint64_t    p_input_len;
+    char        *password;
+    char        *salt;
+    uint8_t     *key;
+    char        *init_vector;
+    uint8_t     *output;
+} ft_des_t;
 
 #endif // _DES_H_

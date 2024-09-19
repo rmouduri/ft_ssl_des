@@ -143,6 +143,6 @@ void    free_ssl(ssl_t *ssl);
 uint8_t *ft_md5(const uint8_t *input, const size_t input_len);
 uint8_t *ft_sha256(const uint8_t *input, const size_t input_len);
 char    *ft_base64(const char *input, const size_t input_len, ssl_option_t options);
-
+uint8_t *ft_des(ssl_t *ssl);
 
 #endif // _FT_SSL_

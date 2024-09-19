@@ -48,6 +48,8 @@ int main(int argc, char **argv) {
             ft_dprintf(ssl.fd, "%s", output);
             free(output);
         }
+    } else if (ssl.algo == DES || ssl.algo == DES_ECB || ssl.algo == DES_CBC) {
+        ft_des(&ssl);
     }
 
     free_ssl(&ssl);

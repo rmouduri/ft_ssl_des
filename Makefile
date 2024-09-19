@@ -1,7 +1,7 @@
 NAME =		ft_ssl
 
 CC =		gcc
-CFLAGS =	-Wall -Werror -Wextra -Wunused -g3
+CFLAGS =	#-Wall -Werror -Wextra -Wunused -g3
 
 FT_DPRINTF_FOLDER	=	src/ft_dprintf
 INCLUDES =	-Iinclude -I$(FT_DPRINTF_FOLDER)/include
@@ -16,7 +16,8 @@ SRCS_FILE =	main.c \
 			utils.c	\
 			algo/md5.c	\
 			algo/sha256.c	\
-			algo/base64.c
+			algo/base64.c	\
+			algo/des.c
 
 
 OBJ_FILE =	$(SRCS_FILE:.c=.o)
