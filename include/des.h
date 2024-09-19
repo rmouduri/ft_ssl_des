@@ -2,8 +2,8 @@
 # define _DES_H_
 
 # define LEFT_SHIFTS { \
-    1, 1, 2, 2, 2, 2, 1, 1, \
-    2, 2, 2, 2, 1, 1, 2, 2 \
+    1, 1, 2, 2, 2, 2, 2, 2, \
+    1, 2, 2, 2, 2, 2, 2, 1 \
 }
 
 # define INITIAL_BLOCK_PERMUTATION_TABLE { \
