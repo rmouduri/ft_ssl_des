@@ -113,6 +113,7 @@
 }
 
 typedef struct ft_des_s {
+    ssl_encrypt_algo_t  algo;
     uint8_t     *padded_input;
     uint64_t    p_input_len;
     char        *password;
@@ -120,6 +121,7 @@ typedef struct ft_des_s {
     uint8_t     *key;
     char        *init_vector;
     uint8_t     *output;
+    uint64_t     output_len;
 } ft_des_t;
 
 #endif // _DES_H_

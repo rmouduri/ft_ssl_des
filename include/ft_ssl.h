@@ -120,6 +120,8 @@ typedef struct ssl_s {
     char                *password;
     char                *salt;
     char                *init_vector;
+    uint8_t             *output;
+    uint64_t            output_len;
 } ssl_t;
 
 

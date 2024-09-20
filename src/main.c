@@ -16,7 +16,9 @@ int main(int argc, char **argv) {
         .key = NULL,
         .password = NULL,
         .salt = NULL,
-        .init_vector = NULL
+        .init_vector = NULL,
+        .output = NULL,
+        .output_len = 0
     };
 
     if (check_args(argc, argv, &ssl) == -1) {
@@ -49,7 +51,13 @@ int main(int argc, char **argv) {
             free(output);
         }
     } else if (ssl.algo == DES || ssl.algo == DES_ECB || ssl.algo == DES_CBC) {
-        ft_des(&ssl);
+        if (ft_des(&ssl) == NULL) {
+            return 1;
+        }
+
+        ft_dprintf(1, "\n");
+        ft_binarydump(ssl.output, ssl.output_len, 1);
+        ft_hexdump(ssl.output, ssl.output_len, 1);
     }
 
     free_ssl(&ssl);
