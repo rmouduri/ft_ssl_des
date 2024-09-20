@@ -151,8 +151,12 @@ static uint8_t *des_algo(ft_des_t *des) {
     for (uint64_t block_index = 0; block_index < des->p_input_len; block_index += 8) {
         if (des->algo == DES_ECB) {
             ft_memset(block, 0, sizeof(block));
-        } else if ((des->algo == DES || des->algo == DES_CBC) && block_index) {
+        } else if (des->algo == DES || des->algo == DES_CBC) {
+            const uint8_t *xor = block_index ? block : des->init_vector;
 
+            for (int i = 0; i < 8; ++i) {
+                des->padded_input[block_index + i] ^= xor[i];
+            }
         }
 
 
@@ -216,13 +220,20 @@ uint8_t *ft_des(ssl_t *ssl) {
     }
 
     des.key = malloc(8);
-    for (int i = 0; i < 8; ++i) { des.key[i] = 'A'; }
+    des.init_vector = malloc(8);
+    for (int i = 0; i < 8; ++i) {
+        des.key[i] = 'A';
+        des.init_vector[i] = 'A';
+    }
 
     if (des_algo(&des) == NULL) {
         return NULL;
     }
 
     free(des.padded_input);
+    free(des.key);
+    free(des.init_vector);
+
     ssl->output = des.output;
     ssl->output_len = des.output_len;
 

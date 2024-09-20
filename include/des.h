@@ -119,7 +119,7 @@ typedef struct ft_des_s {
     char        *password;
     char        *salt;
     uint8_t     *key;
-    char        *init_vector;
+    uint8_t     *init_vector;
     uint8_t     *output;
     uint64_t     output_len;
 } ft_des_t;
