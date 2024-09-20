@@ -29,35 +29,28 @@ static void mangler(uint8_t *block, const uint8_t *pc2) {
 
     // Keyed Substitution (8 S-Boxes)
     uint32_t result = 0;
-    for (int i = 0; i < 8; i++) {
-        // const uint8_t block6 = (expanded[i / 2] >> (4 * (1 - i % 2))) & 0b00111111; // 6 bits from input
-        const uint8_t block6 = ((expanded[i * 6 / 8] << 8) | expanded[i * 6 / 8 + 1]) >> (10 - (i * 6 % 8)) & 0x3F;
-        const int row = ((block6 & 00100000) >> 4) | (block6 & 1);
-        const int col = (block6 >> 1) & 0b00001111;
 
-        result = (result << 4) | s_boxes[i][row][col];
-    }
-    
-    for (int i = 0; i < 4; i++) {
-        mangled_half[i] = (result >> (24 - 8 * i)) & 0b11111111;
-    }
+    result |= (s_boxes[0][((expanded[0] & 0b10000000) >> 6) | ((expanded[0] & 0b00000100) >> 2)][(expanded[0] & 0b01111000) >> 3]) << 28;
+    result |= (s_boxes[1][((expanded[0] & 0b00000010) >> 0) | ((expanded[1] & 0b00010000) >> 4)][((expanded[0] & 0b00000001) << 3) | ((expanded[1] & 0b11100000) >> 5)]) << 24;
+    result |= (s_boxes[2][((expanded[1] & 0b00001000) >> 2) | ((expanded[2] & 0b01000000) >> 6)][((expanded[1] & 0b00000111) << 1) | ((expanded[2] & 0b10000000) >> 7)]) << 20;
+    result |= (s_boxes[3][((expanded[2] & 0b00100000) >> 4) | ((expanded[2] & 0b00000001) >> 0)][((expanded[2] & 0b00011110) >> 1)]) << 16;
+    result |= (s_boxes[4][((expanded[3] & 0b10000000) >> 6) | ((expanded[3] & 0b00000100) >> 2)][((expanded[3] & 0b01111000) >> 3)]) << 12;
+    result |= (s_boxes[5][((expanded[3] & 0b00000010) >> 0) | ((expanded[4] & 0b00010000) >> 4)][((expanded[3] & 0b00000001) << 3) | ((expanded[4] & 0b11100000) >> 5)]) << 8;
+    result |= (s_boxes[6][((expanded[4] & 0b00001000) >> 2) | ((expanded[5] & 0b01000000) >> 6)][((expanded[4] & 0b00000111) << 1) | ((expanded[5] & 0b10000000) >> 7)]) << 4;
+    result |= (s_boxes[7][((expanded[5] & 0b00100000) >> 4) | ((expanded[5] & 0b00000001) >> 0)][((expanded[5] & 0b00011110) >> 1)]) << 0;
 
-    // Transposition (P-Box)
-    permutation(mangled_half, mangled_half, sizeof(mangled_half) * 8, p_box);
-    // uint32_t input = 0;
-    // for (int i = 0; i < 4; i++) {
-    //     input = (input << 8) | mangled_half[i];
-    // }
-
-    // for (int i = 0; i < 32; i++) {
-    //     if (input & (1 << (32 - p_box[i]))) {
-    //         result |= (1 << (31 - i));
-    //     }
-    // }
+    mangled_half[0] = (result >> 24) & 0b11111111;
+    mangled_half[1] = (result >> 16) & 0b11111111;
+    mangled_half[2] = (result >>  8) & 0b11111111;
+    mangled_half[3] = (result >>  0) & 0b11111111;
 
     // for (int i = 0; i < 4; i++) {
     //     mangled_half[i] = (result >> (24 - 8 * i)) & 0b11111111;
     // }
+
+
+    // Transposition (P-Box)
+    permutation(mangled_half, mangled_half, sizeof(mangled_half) * 8, p_box);
 
     // Xor 2
     for (int i = 0; i < 4; ++i) {
