@@ -1,7 +1,7 @@
 NAME =		ft_ssl
 
 CC =		gcc
-CFLAGS =	-g3 #-Wall -Werror -Wextra -Wunused -g3
+CFLAGS =	-Wall -Werror -Wextra -Wunused -g3
 
 FT_DPRINTF_FOLDER	=	src/ft_dprintf
 INCLUDES =	-Iinclude -I$(FT_DPRINTF_FOLDER)/include
@@ -32,7 +32,7 @@ all: $(NAME)
 
 $(NAME): $(OBJS)
 	@make -C ${FT_DPRINTF_FOLDER}
-	$(CC) $(CFLAGS) $(INCLUDES) $(OBJS) -L$(FT_DPRINTF_FOLDER) -lftprintf -o $(NAME)
+	$(CC) $(CFLAGS) $(INCLUDES) $(OBJS) -L$(FT_DPRINTF_FOLDER) -lftprintf -lbsd -o $(NAME)
 
 $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.c | $(OBJS_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@

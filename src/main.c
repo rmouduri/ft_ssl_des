@@ -52,6 +52,7 @@ int main(int argc, char **argv) {
         }
     } else if (ssl.algo == DES || ssl.algo == DES_ECB || ssl.algo == DES_CBC) {
         if (ft_des(&ssl) == NULL) {
+            free_ssl(&ssl);
             return 1;
         }
 

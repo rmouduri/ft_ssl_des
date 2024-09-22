@@ -117,7 +117,8 @@ typedef struct ft_des_s {
     uint8_t     *padded_input;
     uint64_t    p_input_len;
     char        *password;
-    char        *salt;
+    uint8_t     *salt;
+    uint64_t    salt_len;
     uint8_t     *key;
     uint8_t     *init_vector;
     uint8_t     *output;

@@ -288,6 +288,10 @@ int check_des_options(int argc, char **argv, ssl_t *ssl) {
         return -1;
     }
 
+    if (!(ssl->options & DECRYPT_MODE_OPTION)) {
+        ssl->options |= ENCRYPT_MODE_OPTION;
+    }
+
     return 0;
 }
 

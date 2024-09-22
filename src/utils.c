@@ -68,4 +68,8 @@ void free_ssl(ssl_t *ssl) {
 	if (ssl->message) {
 		free(ssl->message);
 	}
+
+	if (ssl->output) {
+		free(ssl->output);
+	}
 }

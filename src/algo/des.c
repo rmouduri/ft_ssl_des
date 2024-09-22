@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <bsd/readpassphrase.h> 
 
 #include "ft_ssl.h"
 #include "des.h"
@@ -224,72 +225,259 @@ static uint8_t *des_decrypt(ft_des_t *des) {
         des->output_len += 8;
     }
 
+    #include "display.h"
+    ft_dprintf(1, "old len: %d\n", des->output_len);
+    ft_hexdump(des->output, des->output_len, 1);
+    des->output_len -= des->output[des->output_len - 1];
+    ft_dprintf(1, "new len: %d\n", des->output_len);
     return des->output;
 }
 
-static uint8_t *des_padding(const char *input, size_t input_len) {
-    uint8_t *padded_input;
+static uint8_t *get_input(const char *input, size_t input_len, ssl_option_t options, uint64_t *len) {
+    uint8_t *output;
     uint8_t padding_len = 8 - input_len % 8;
 
-    if ((padded_input = malloc(sizeof(uint8_t) * (input_len + padding_len + 1))) == NULL) {
-        print_malloc_error("des_padding");
+    if (options & (DECRYPT_MODE_OPTION | DE_ENCODE_IN_OUTPUT_BASE64_OPTION)) {
+        if ((output = (uint8_t *) ft_base64(input, input_len, DECODE_MODE_OPTION)) == NULL) {
+            return NULL;
+        }
+
+        return output;
+    }
+
+    if ((output = malloc(sizeof(uint8_t) * (input_len + padding_len + 1))) == NULL) {
+        print_malloc_error("get_input");
         return NULL;
     }
 
-    ft_memcpy(padded_input, input, input_len);
+    ft_memcpy(output, input, input_len);
 
     for (uint8_t i = 0; i < padding_len; ++i) {
-        padded_input[input_len + i] = padding_len;
+        output[input_len + i] = padding_len;
     }
 
-    padded_input[input_len + padding_len] = 0;
-    return padded_input;
+    output[input_len + padding_len] = 0;
+    *len = input_len + padding_len;
+    return output;
+}
+
+static uint8_t get_hex_val(uint8_t hex) {
+    if (hex >= 'a' && hex <= 'z') {
+        return hex - 'a' + 10;
+    } else if (hex >= 'A' && hex <= 'Z') {
+        return hex - 'A' + 10;
+    } else if (hex >= '0' && hex <= '9') {
+        return hex - '0';
+    }
+
+    return 0;
+}
+
+static uint8_t *get_iv(const char *ssl_iv) {
+    uint8_t ssl_iv_len = ssl_iv ? ft_strlen(ssl_iv) : 0;
+    uint8_t *iv = NULL;
+
+    if ((iv = malloc(sizeof(uint8_t) * 8)) == NULL) {
+        print_malloc_error("get_iv");
+        return NULL;
+    }
+
+    if (ssl_iv) {
+        for (int i = 0; i < ssl_iv_len && i < 16; ++i) {
+            iv[i / 2] |= get_hex_val(ssl_iv[i]) << (4 * ((i + 1) % 2));
+        }
+
+        for (int i = (ssl_iv_len + 1) / 2; i < 8; ++i) {
+            iv[i] = 0;
+        }
+    } else {
+        for (int i = 0; i < 8; ++i) {
+            iv[i] = rand() % 256;
+        }
+    }
+
+    return iv;
+}
+
+static uint8_t *get_salt(const char *ssl_salt, uint64_t *salt_len) {
+    uint8_t *salt = NULL;
+
+    *salt_len = ssl_salt ? ft_strlen(ssl_salt) : 8;
+
+    if ((salt = malloc(sizeof(uint8_t) * 8)) == NULL) {
+        print_malloc_error("get_salt");
+        return NULL;
+    }
+
+    if (ssl_salt) {
+        for (uint64_t i = 0; i < *salt_len && i < 16; ++i) {
+            salt[i / 2] |= get_hex_val(ssl_salt[i]) << (4 * ((i + 1) % 2));
+        }
+
+        for (uint64_t i = (*salt_len + 1) / 2; i < 8; ++i) {
+            salt[i] = 0;
+        }
+    } else {
+        for (uint64_t i = 0; i < *salt_len; ++i) {
+            salt[i] = rand() % 256;
+        }
+    }
+
+    return salt;
+}
+
+static char *get_password(const char *ssl_pwd, const char *key) {
+    char *pwd;
+
+    if (key) {
+        return NULL;
+    }
+
+    if (ssl_pwd) {
+        int len = ft_strlen(ssl_pwd);
+        if ((pwd = malloc(sizeof(char) * (len + 1))) == NULL) {
+            print_malloc_error("get_password");
+            return NULL;
+        }
+
+        ft_memcpy(pwd, ssl_pwd, len);
+
+        return pwd;
+    }
+
+    if ((pwd = malloc(sizeof(char) * 256)) == NULL) {
+        print_malloc_error("get_password");
+        return NULL;
+    }
+
+    ft_memset(pwd, 0, 256);
+
+    while (readpassphrase("Enter a password: ", pwd, 256, 0) == NULL || !pwd[0]) {
+        ft_dprintf(STDERR_FILENO, "Invalid password, retry.\n");
+    }
+
+    return pwd;
+}
+
+static int gen_key(uint8_t *key, const char *password, uint64_t password_len, const uint8_t *salt, uint64_t salt_len) {
+
+
+    (void)key;
+    (void)password;
+    (void)password_len;
+    (void)salt;
+    (void)salt_len;
+    return -1;
+}
+
+static uint8_t *get_key(const char *ssl_key, const char *password, uint64_t password_len, const uint8_t *salt, uint64_t salt_len) {
+    uint8_t ssl_key_len = ssl_key ? ft_strlen(ssl_key) : 8;
+    uint8_t *key = NULL;
+
+    for (int i = 0; i < ssl_key_len && i < 8; ++i) {
+        if (!((ssl_key[i] >= 'a' && ssl_key[i] <= 'f')
+                || (ssl_key[i] >= 'A' && ssl_key[i] <= 'F')
+                || (ssl_key[i] >= '0' && ssl_key[i] <= '9'))) {
+            ft_dprintf(STDERR_FILENO, "Invalid key near `%s`.\n", &ssl_key[i]);
+            return NULL;
+        }
+    }
+
+    if ((key = malloc(sizeof(uint8_t) * 8)) == NULL) {
+        print_malloc_error("get_key");
+        return NULL;
+    }
+
+    ft_memset(key, 0, 8);
+
+    if (ssl_key) {
+        for (int i = 0; i < ssl_key_len && i < 16; ++i) {
+            key[i / 2] |= get_hex_val(ssl_key[i]) << (4 * ((i + 1) % 2));
+        }
+
+        for (int i = (ssl_key_len + 1) / 2; i < 8; ++i) {
+            key[i] = 0;
+        }
+    } else {
+        if (gen_key(key, password, password_len, salt, salt_len) == -1) {
+            ft_dprintf(STDERR_FILENO, "Error in key generation.\n");
+            free(key);
+            return NULL;
+        }
+    }
+
+    return key;
+}
+
+void free_des(ft_des_t *des, uint8_t free_output) {
+    if (des->padded_input) {
+        free(des->padded_input);
+    }
+
+    if (des->salt) {
+        free(des->salt);
+    }
+
+    if (des->password) {
+        free(des->password);
+    }
+
+    if (des->key) {
+        free(des->key);
+    }
+
+    if (free_output && des->output) {
+        free(des->output);
+    }
 }
 
 uint8_t *ft_des(ssl_t *ssl) {
     ft_des_t des = {
         .algo           = ssl->algo,
-        .padded_input   = ssl->options & DECRYPT_MODE_OPTION
-            ? malloc(8) //(uint8_t *) /*"\x7f\xd9\x51\x6b\x0a\x23\x56\x5d"*/  "\x89\xc1\x5b\x83\xf1\xe8\xf1\x21"
-            : des_padding(ssl->message, ssl->message_len),
-        .p_input_len    = ssl->options & DECRYPT_MODE_OPTION ? 8 : ft_strlen((char *) des.padded_input),
-        .password       = NULL,
-        .salt           = NULL,
-        .key            = NULL,
-        .init_vector    = NULL,
+        .padded_input   = get_input(ssl->message, ssl->message_len, ssl->options, &des.p_input_len),
+        // .p_input_len    = des.p_input_len,
+        .password       = ssl->key ? NULL : get_password(ssl->password, ssl->key),
+        .salt           = ssl->key ? NULL : get_salt(ssl->salt, &des.salt_len),
+        // .salt_len    = des.salt_len,
+        .key            = get_key(ssl->key, des.password, ft_strlen(des.password), des.salt, des.salt_len),
+        .init_vector    = ssl->algo == DES_ECB ? NULL : get_iv(ssl->init_vector),
         .output         = NULL,
         .output_len     = 0
     };
 
-    if (des.padded_input == NULL) {
+    if (des.padded_input == NULL || des.key == NULL
+            || (!ssl->key && (!des.password || !des.salt))) {
+        free_des(&des, 1);
         return NULL;
     }
 
-    des.key = malloc(8);
-    des.init_vector = malloc(8);
-    for (int i = 0; i < 8; ++i) {
-        des.key[i] = 'A';
-        des.init_vector[i] = 'A';
-    }
-
     if (ssl->options & DECRYPT_MODE_OPTION) {
-        ft_dprintf(1, "Decrypt\n");
         if (des_decrypt(&des) == NULL) {
+            free_des(&des, 1);
             return NULL;
         }
     } else {
-        ft_dprintf(1, "Encrypt\n");
         if (des_encrypt(&des) == NULL) {
+            free_des(&des, 1);
             return NULL;
         }
     }
-
-    free(des.padded_input);
-    free(des.key);
-    free(des.init_vector);
 
     ssl->output = des.output;
     ssl->output_len = des.output_len;
 
+    if (ssl->options & (ENCRYPT_MODE_OPTION | DE_ENCODE_IN_OUTPUT_BASE64_OPTION)) {
+        uint8_t *tmp = NULL;
+
+        if ((tmp = (uint8_t *) ft_base64((char *) des.output, des.output_len, DECODE_MODE_OPTION)) == NULL) {
+            free_des(&des, 1);
+            return NULL;
+        }
+
+        free(ssl->output);
+        ssl->output = tmp;
+    }
+
+    free_des(&des, 0);
     return ssl->output;
 }
