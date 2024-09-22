@@ -5,29 +5,11 @@
 
 #include "ft_ssl.h"
 #include "des.h"
-    #include "display.h"
 
 static void permutation(uint8_t *dest, const uint8_t *src, int size, const uint8_t *permutation_table);
 
-static const uint8_t ep_table[] = EXPANSION_PERMUTATION_TABLE;
 static const uint8_t s_boxes[8][4][16] = S_BOXES;
-static const uint8_t p_box[32] = P_BOX;
-static void mangler(uint8_t *block, const uint8_t *pc2) {
-    uint8_t og_left_half[4], og_right_half[4];
-    uint8_t mangled_half[4], expanded[6] = {0};
-
-    ft_memcpy(&og_left_half, block, 4);
-    ft_memcpy(&og_right_half, block + 4, 4);
-
-    // Expansion permutation
-    permutation(expanded, og_right_half, sizeof(expanded) * 8, ep_table);
-
-    // Xor 1
-    for (int i = 0; i < 6; ++i) {
-        expanded[i] = expanded[i] ^ pc2[i];
-    }
-
-    // Keyed Substitution (8 S-Boxes)
+static void keyed_substitution(uint8_t *expanded, uint8_t *mangled_half) {
     uint32_t result = 0;
 
     result |= ((s_boxes[0][((expanded[0] & 0b10000000) >> 6) | ((expanded[0] & 0b00000100) >> 2)][(expanded[0] & 0b01111000) >> 3]) & 0b1111) << 28;
@@ -48,13 +30,34 @@ static void mangler(uint8_t *block, const uint8_t *pc2) {
     // for (int i = 0; i < 4; i++) {
     //     mangled_half[i] = (result >> (24 - 8 * i)) & 0b11111111;
     // }
+}
+
+static const uint8_t ep_table[] = EXPANSION_PERMUTATION_TABLE;
+static const uint8_t p_box[32] = P_BOX;
+static void mangler(uint8_t *block, const uint8_t *pc2) {
+    uint8_t og_left_half[4], og_right_half[4];
+    uint8_t mangled_half[4], expanded[6] = {0};
+
+    ft_memcpy(&og_left_half, block, 4);
+    ft_memcpy(&og_right_half, block + 4, 4);
+
+    // Expansion permutation
+    permutation(expanded, og_right_half, sizeof(expanded) * 8, ep_table);
+
+    // Xor 1
+    for (int i = 0; i < 6; ++i) {
+        expanded[i] ^= pc2[i];
+    }
+
+    // Keyed Substitution (8 S-Boxes)
+    keyed_substitution(expanded, mangled_half);
 
     // Transposition (P-Box)
     permutation(mangled_half, mangled_half, sizeof(mangled_half) * 8, p_box);
 
     // Xor 2
     for (int i = 0; i < 4; ++i) {
-        mangled_half[i] = mangled_half[i] ^ og_left_half[i];
+        mangled_half[i] ^= og_left_half[i];
     }
 
     ft_memcpy(block, &og_right_half, 4);
@@ -69,30 +72,30 @@ static void end_32_bit_swap(uint8_t *block) {
     ft_memcpy(block + 4, temp, 4);
 }
 
-static void shift_key(uint8_t *key, int shift) {
-    uint32_t left_half = (((uint32_t) key[0]) << 24)
-        | (((uint32_t) key[1]) << 16)
-        | (((uint32_t) key[2]) << 8)
-        | (((uint32_t) (key[3] & 0b11110000)));
-    uint32_t right_half = (((uint32_t) key[3]) << 24)
-        | (((uint32_t) key[4]) << 16)
-        | (((uint32_t) key[5]) << 8)
-        | (((uint32_t) key[6]));
+static void shift_key(uint8_t *dest, const uint8_t *src, int shift) {
+    uint32_t left_half = (((uint32_t) src[0]) << 24)
+        | (((uint32_t) src[1]) << 16)
+        | (((uint32_t) src[2]) << 8)
+        | (((uint32_t) (src[3] & 0b11110000)));
+    uint32_t right_half = (((uint32_t) src[3]) << 24)
+        | (((uint32_t) src[4]) << 16)
+        | (((uint32_t) src[5]) << 8)
+        | (((uint32_t) src[6]));
 
     left_half <<= shift;
-    left_half |= (key[0] & (0b11000000 << (2 - shift))) >> (4 - shift);
+    left_half |= (src[0] & (0b11000000 << (2 - shift))) >> (4 - shift);
 
     right_half <<= shift;
     right_half &= ~(0b11110000000000000000000000000000);
-    right_half |= (key[3] & 0b00001110) >> (4 - shift);
+    right_half |= (src[3] & 0b00001110) >> (4 - shift);
 
-    key[0] = left_half >> 24;
-    key[1] = left_half >> 16;
-    key[2] = left_half >> 8;
-    key[3] = (left_half & 0b11110000) | ((right_half >> 24) & 0b00001111);
-    key[4] = right_half >> 16;
-    key[5] = right_half >> 8;
-    key[6] = right_half;
+    dest[0] = left_half >> 24;
+    dest[1] = left_half >> 16;
+    dest[2] = left_half >> 8;
+    dest[3] = (left_half & 0b11110000) | ((right_half >> 24) & 0b00001111);
+    dest[4] = right_half >> 16;
+    dest[5] = right_half >> 8;
+    dest[6] = right_half;
 }
 
 static void permutation(uint8_t *dest, const uint8_t *src, int size, const uint8_t *permutation_table) {
@@ -112,7 +115,7 @@ static int append_output(uint8_t **output, const uint8_t *block, const int new_s
 
     if (*output) {
         if ((tmp = malloc(sizeof(uint8_t) * (new_size - 8))) == NULL) {
-            print_malloc_error("des_algo: tmp malloc");
+            print_malloc_error("des_encrypt: tmp malloc");
             return -1;
         }
 
@@ -124,7 +127,7 @@ static int append_output(uint8_t **output, const uint8_t *block, const int new_s
     }
 
     if ((*output = malloc(sizeof(uint8_t) * new_size)) == NULL) {
-        print_malloc_error("des_algo: *output malloc");
+        print_malloc_error("des_encrypt: *output malloc");
         free(tmp);
         return -1;
     }
@@ -144,9 +147,9 @@ static const uint8_t ikp_table[] = INITIAL_KEY_PERMUTATION_TABLE;
 static const uint8_t rkp_table[] = ROUND_KEY_PERMUTATION_TABLE;
 static const uint8_t iibp_table[] = INVERSE_INITIAL_BLOCK_PERMUTATION_TABLE;
 static const uint8_t left_shifts[16] = LEFT_SHIFTS;
-static uint8_t *des_algo(ft_des_t *des) {
+static uint8_t *des_encrypt(ft_des_t *des) {
     uint8_t block[8] = {0};
-    uint8_t pc1[7] = {0}, pc2[6] = {0};
+    uint8_t pc1[16][7] = {0}, pc2[16][6] = {0};
 
     for (uint64_t block_index = 0; block_index < des->p_input_len; block_index += 8) {
         if (des->algo == DES_ECB) {
@@ -159,19 +162,60 @@ static uint8_t *des_algo(ft_des_t *des) {
             }
         }
 
-
         permutation(block, des->padded_input + block_index, sizeof(block) * 8, ibp_table);
-        permutation(pc1, des->key, sizeof(pc1) * 8, ikp_table);
+        permutation(pc1[0], des->key, sizeof(pc1[0]) * 8, ikp_table);
+        for (int kround = 0; kround < 16; ++kround) {
+            shift_key(pc1[kround], pc1[kround - (kround ? 1 : 0)], left_shifts[kround]);
+            permutation(pc2[kround], pc1[kround], sizeof(pc2[kround]) * 8, rkp_table);
+        }
 
         for (int round = 0; round < 16; ++round) {
-            shift_key(pc1, left_shifts[round]);
-            permutation(pc2, pc1, sizeof(pc2) * 8, rkp_table);
-
-            mangler(block, pc2);
+            mangler(block, pc2[round]);
         }
 
         end_32_bit_swap(block);
         permutation(block, block, sizeof(block) * 8, iibp_table);
+
+
+        if (append_output(&des->output, block, block_index + 8) == -1) {
+            return NULL;
+        }
+        des->output_len += 8;
+    }
+
+    return des->output;
+}
+
+static uint8_t *des_decrypt(ft_des_t *des) {
+    uint8_t block[8] = {0};
+    uint8_t pc1[16][7] = {0}, pc2[16][6] = {0};
+
+    for (uint64_t block_index = 0; block_index < des->p_input_len; block_index += 8) {
+        if (des->algo == DES_ECB) {
+            ft_memset(block, 0, sizeof(block));
+        }
+
+        permutation(block, des->padded_input + block_index, sizeof(block) * 8, ibp_table);
+        permutation(pc1[0], des->key, sizeof(pc1[0]) * 8, ikp_table);
+        for (int kround = 0; kround < 16; ++kround) {
+            shift_key(pc1[kround], pc1[kround - (kround ? 1 : 0)], left_shifts[kround]);
+            permutation(pc2[kround], pc1[kround], sizeof(pc2[kround]) * 8, rkp_table);
+        }
+
+        for (int round = 15; round >= 0; --round) {
+            mangler(block, pc2[round]);
+        }
+
+        end_32_bit_swap(block);
+        permutation(block, block, sizeof(block) * 8, iibp_table);
+
+        if (des->algo == DES || des->algo == DES_CBC) {
+            const uint8_t *xor = block_index ? des->padded_input - 8 : des->init_vector;
+
+            for (int i = 0; i < 8; ++i) {
+                block[i] ^= xor[i];
+            }
+        }
 
 
         if (append_output(&des->output, block, block_index + 8) == -1) {
@@ -205,8 +249,10 @@ static uint8_t *des_padding(const char *input, size_t input_len) {
 uint8_t *ft_des(ssl_t *ssl) {
     ft_des_t des = {
         .algo           = ssl->algo,
-        .padded_input   = des_padding(ssl->message, ssl->message_len),
-        .p_input_len    = ft_strlen((char *) des.padded_input),
+        .padded_input   = ssl->options & DECRYPT_MODE_OPTION
+            ? malloc(8) //(uint8_t *) /*"\x7f\xd9\x51\x6b\x0a\x23\x56\x5d"*/  "\x89\xc1\x5b\x83\xf1\xe8\xf1\x21"
+            : des_padding(ssl->message, ssl->message_len),
+        .p_input_len    = ssl->options & DECRYPT_MODE_OPTION ? 8 : ft_strlen((char *) des.padded_input),
         .password       = NULL,
         .salt           = NULL,
         .key            = NULL,
@@ -226,8 +272,16 @@ uint8_t *ft_des(ssl_t *ssl) {
         des.init_vector[i] = 'A';
     }
 
-    if (des_algo(&des) == NULL) {
-        return NULL;
+    if (ssl->options & DECRYPT_MODE_OPTION) {
+        ft_dprintf(1, "Decrypt\n");
+        if (des_decrypt(&des) == NULL) {
+            return NULL;
+        }
+    } else {
+        ft_dprintf(1, "Encrypt\n");
+        if (des_encrypt(&des) == NULL) {
+            return NULL;
+        }
     }
 
     free(des.padded_input);
