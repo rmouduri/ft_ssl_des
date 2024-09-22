@@ -67,9 +67,11 @@ void free_ssl(ssl_t *ssl) {
 
 	if (ssl->message) {
 		free(ssl->message);
+		ssl->message = NULL;
 	}
 
 	if (ssl->output) {
 		free(ssl->output);
+		ssl->output = NULL;
 	}
 }

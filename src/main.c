@@ -56,9 +56,9 @@ int main(int argc, char **argv) {
             return 1;
         }
 
-        ft_dprintf(1, "\n");
-        ft_binarydump(ssl.output, ssl.output_len, 1);
-        ft_hexdump(ssl.output, ssl.output_len, 1);
+        ft_dprintf(ssl.fd, "\n");
+        ft_binarydump(ssl.output, ssl.output_len, ssl.fd);
+        ft_hexdump(ssl.output, ssl.output_len, ssl.fd);
     }
 
     free_ssl(&ssl);

@@ -40,15 +40,11 @@ static bool is_valid_base64(const char *input, size_t input_len) {
         }
     }
 
-    if (input[input_len - 1] == '=' && input[input_len - 2] == '=' && input_len % 4 != 2) {
-        return false;
-    }
-    
     return true;
 }
 
-static void decode(const char *input, const size_t input_len, char *output) {
-    char char_4set[4];
+static void decode(const uint8_t *input, const size_t input_len, char *output) {
+    uint8_t char_4set[4];
     size_t i = 0, output_index = 0;
     int padding = 0;
 
@@ -70,9 +66,9 @@ static void decode(const char *input, const size_t input_len, char *output) {
     output[output_index] = 0;
 }
 
-static void encode(const char *input, const size_t input_len, char *output) {
-    const char base64_chars[] = BASE64_CHARS;
-    char char_3set[3];
+static void encode(const uint8_t *input, const size_t input_len, char *output) {
+    const uint8_t base64_chars[] = BASE64_CHARS;
+    uint8_t char_3set[3] = {0};
     size_t i = 0, output_index = 0;
 
     while (i < input_len) {
@@ -92,10 +88,10 @@ static void encode(const char *input, const size_t input_len, char *output) {
     }
 
     if (i % 3) {
-        output[output_index++] = base64_chars[char_3set[0] >> 2];
-        output[output_index++] = base64_chars[((char_3set[0] & 0b00000011) << 4) | ((char_3set[1] & 0b11110000) >> 4)];
+        output[output_index++] = base64_chars[(char_3set[0] >> 2)];
+        output[output_index++] = base64_chars[(((char_3set[0] & 0b00000011) << 4) | ((char_3set[1] & 0b11110000) >> 4))];
         if (char_3set[1]) {
-            output[output_index++] = base64_chars[(char_3set[1] & 0b00001111) << 2];
+            output[output_index++] = base64_chars[((char_3set[1] & 0b00001111) << 2)];
             output[output_index++] = PADDING;
         } else {
             output[output_index++] = PADDING;
@@ -106,7 +102,7 @@ static void encode(const char *input, const size_t input_len, char *output) {
     output[output_index] = 0;
 }
 
-char *ft_base64(const char *input, const size_t input_len, ssl_option_t options) {
+char *ft_base64(const char *input, const size_t input_len, const ssl_base64_option_t options) {
     const size_t output_len = options & DECODE_MODE_OPTION ? ((input_len / 4) * 3) : (4 * ((input_len + 2) / 3));
     char *output = malloc(sizeof(char) * (output_len + 1));
 
@@ -115,15 +111,17 @@ char *ft_base64(const char *input, const size_t input_len, ssl_option_t options)
         return NULL;
     }
 
+    ft_memset(output, 0, output_len);
+
     if (options & DECODE_MODE_OPTION) {
         if (!is_valid_base64(input, input_len)) {
             ft_dprintf(STDERR_FILENO, "Invalid base64 input.\n");
             free(output);
             return NULL;
         }
-        decode(input, input_len, output);
+        decode((uint8_t *) input, input_len, output);
     } else {
-        encode(input, input_len, output);
+        encode((uint8_t *) input, input_len, output);
     }
 
     return output;
