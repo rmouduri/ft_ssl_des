@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     ssl_t   ssl = {
         .algo = -1,
         .options = 0,
-        .fd = STDIN_FILENO,
+        .fd = STDOUT_FILENO,
         .ssl_inputs = NULL,
         .message = NULL,
         .message_len = 0,
@@ -57,9 +57,8 @@ int main(int argc, char **argv) {
         }
 
         if (ssl.options & DE_ENCODE_IN_OUTPUT_BASE64_OPTION) {
-            ft_dprintf(ssl.fd, "\n%s\n", ssl.output);
+            ft_dprintf(ssl.fd, "%s\n", ssl.output);
         } else {
-            ft_dprintf(ssl.fd, "\n");
             for (uint64_t i = 0; i < ssl.output_len; ++i) {
                 ft_dprintf(ssl.fd, "%x", ssl.output[i]);
             }

@@ -464,7 +464,6 @@ uint8_t *ft_des(ssl_t *ssl) {
         for (int i = 0; i < 8; ++i) {
             ft_dprintf(ssl->fd, "%X", des.key[i]);
         }
-        ft_dprintf(ssl->fd, "%s\n", ft_base64((char *) des.key, 8, ENCODE_MODE_OPTION));
         ft_dprintf(ssl->fd, "\n");
         if (des.init_vector) {
             ft_dprintf(ssl->fd, "iv  = ");
