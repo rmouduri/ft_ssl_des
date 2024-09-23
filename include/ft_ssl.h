@@ -39,6 +39,7 @@
 # define PASSWORD_ASCII_ARG             "-p"
 # define SALT_HEX_ARG                   "-s"
 # define INIT_VECTOR_HEX_ARG            "-v"
+# define DISPLAY_KEY_IV_ARG             "-P"
 
 
 # define FT_SSL_HELP    "help\n"
@@ -85,7 +86,8 @@ typedef enum ssl_base64_option_e {
 typedef enum ssl_des_option_e {
     DE_ENCODE_IN_OUTPUT_BASE64_OPTION   = 1 << 0,
     DECRYPT_MODE_OPTION                 = 1 << 1,
-    ENCRYPT_MODE_OPTION                 = 1 << 2
+    ENCRYPT_MODE_OPTION                 = 1 << 2,
+    DISPLAY_KEY_IV_OPTION                 = 1 << 3
 } ssl_des_option_t;
 
 typedef enum ssl_input_type_e {

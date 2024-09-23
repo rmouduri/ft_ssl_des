@@ -465,6 +465,28 @@ uint8_t *ft_des(ssl_t *ssl) {
         return NULL;
     }
 
+    if (ssl->options & DISPLAY_KEY_IV_OPTION) {
+        ft_dprintf(ssl->fd, "key = ");
+        for (int i = 0; i < 8; ++i) {
+            ft_dprintf(ssl->fd, "%x", des.key[i]);
+        }
+        ft_dprintf(ssl->fd, "\n");
+        if (des.init_vector) {
+            ft_dprintf(ssl->fd, "iv  = ");
+            for (int i = 0; i < 8; ++i) {
+                ft_dprintf(ssl->fd, "%X", des.init_vector[i]);
+            }
+            ft_dprintf(ssl->fd, "\n");
+        }
+        if (des.salt) {
+            ft_dprintf(ssl->fd, "salt= ");
+            for (uint64_t i = 0; i < des.salt_len; ++i) {
+                ft_dprintf(ssl->fd, "%x", des.salt[i]);
+            }
+            ft_dprintf(ssl->fd, "\n");
+        }
+    }
+
     if (ssl->options & DECRYPT_MODE_OPTION) {
         if (des_decrypt(&des) == NULL) {
             free_des(&des, 1);
