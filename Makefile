@@ -17,7 +17,8 @@ SRCS_FILE =	main.c \
 			algo/md5.c	\
 			algo/sha256.c	\
 			algo/base64.c	\
-			algo/des.c
+			algo/des.c		\
+			algo/pbkdf2.c
 
 
 OBJ_FILE =	$(SRCS_FILE:.c=.o)

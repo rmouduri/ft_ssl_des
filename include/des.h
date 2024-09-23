@@ -125,4 +125,6 @@ typedef struct ft_des_s {
     uint64_t     output_len;
 } ft_des_t;
 
+int gen_key(uint8_t *key, const char *password, uint64_t password_len, const uint8_t *salt, uint64_t salt_len);
+
 #endif // _DES_H_

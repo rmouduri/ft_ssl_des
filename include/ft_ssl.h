@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifndef _FT_SSL_
 # define _FT_SSL_

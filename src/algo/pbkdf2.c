@@ -1,19 +1,27 @@
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-
 #include "ft_ssl.h"
 #include "ft_sha256.h"
+#include "des.h"
+
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stddef.h>
+
+#define SHA256_BLOCK_SIZE 32
+#define BLOCK_SIZE 64
+#define KEY_SIZE 8
+#define ITERATIONS 10000
 
 
-static int SHA256_Padding(const uint8_t *input, const size_t input_len, ft_sha256_t *sha256) {
+static int mini_SHA256_Padding(const uint8_t *input, const size_t input_len, ft_sha256_t *sha256) {
     uint8_t *padded_input;
 
     sha256->input_len = 64 + (64 * ((input_len / 64) + (input_len % 64 >= 56 ? 1 : 0)));
     padded_input = malloc(sizeof(uint8_t) * sha256->input_len);
 
     if (padded_input == NULL) {
-        print_malloc_error("SHA256_Padding");
+        print_malloc_error("mini_SHA256_Padding");
         return -1;
     }
 
@@ -41,7 +49,7 @@ static int SHA256_Padding(const uint8_t *input, const size_t input_len, ft_sha25
     return 0;
 }
 
-static void SHA256_Algo(ft_sha256_t *sha256) {
+static void mini_SHA256_Algo(ft_sha256_t *sha256) {
     const uint32_t k[64] = K;
     uint32_t tmp_state[8];
     uint32_t w[64];
@@ -108,32 +116,104 @@ static void SHA256_Algo(ft_sha256_t *sha256) {
     }
 }
 
-uint8_t *ft_sha256(const uint8_t *input, const size_t input_len) {
+static int mini_sha256(uint8_t *dest, const uint8_t *input, const size_t input_len) {
     ft_sha256_t     sha256;
-    uint8_t         *hash;
 
-    if (SHA256_Padding(input, input_len, &sha256) == -1) {
-        return NULL;
+    if (mini_SHA256_Padding(input, input_len, &sha256) == -1) {
+        return -1;
     }
 
-    SHA256_Algo(&sha256);
+    mini_SHA256_Algo(&sha256);
 
     free(sha256.input);
-
-    if ((hash = malloc(sizeof(uint8_t) * 32)) == NULL) {
-        print_malloc_error("ft_sha256");
-        return NULL;
-    }
 
     /* Big Endian
         Same story, but the hash is interpreted as a 32-bit array of length 8 (256)
     */
     for (int i = 0; i < 8; ++i) {
-        hash[i * 4] = (sha256.state[i] >> 24) & 0xFF;
-        hash[i * 4 + 1] = (sha256.state[i] >> 16) & 0xFF;
-        hash[i * 4 + 2] = (sha256.state[i] >> 8) & 0xFF;
-        hash[i * 4 + 3] = sha256.state[i] & 0xFF;
+        dest[i * 4] = (sha256.state[i] >> 24) & 0xFF;
+        dest[i * 4 + 1] = (sha256.state[i] >> 16) & 0xFF;
+        dest[i * 4 + 2] = (sha256.state[i] >> 8) & 0xFF;
+        dest[i * 4 + 3] = sha256.state[i] & 0xFF;
     }
 
-    return hash;
+    return 0;
+}
+
+static int hmac(uint8_t *dest, const uint8_t *secret, const uint8_t *msg, size_t msg_len) {
+    uint8_t i_key_pad[BLOCK_SIZE] = {0}, o_key_pad[BLOCK_SIZE] = {0};
+
+    for (int i = 0; i < BLOCK_SIZE; ++i) {
+        i_key_pad[i] = secret[i] ^ 0x36;
+        o_key_pad[i] = secret[i] ^ 0x5c;
+    }
+
+    // Inner Hash
+    uint8_t inner_input[sizeof(i_key_pad) + msg_len], inner_hash[SHA256_BLOCK_SIZE] = {0};
+
+    ft_memcpy(inner_input, i_key_pad, sizeof(i_key_pad));
+    ft_memcpy(inner_input + sizeof(i_key_pad), msg, msg_len);
+
+    if (mini_sha256(inner_hash, inner_input, sizeof(inner_input)) == -1) {
+        return -1;
+    }
+
+    // Outer Hash
+    uint8_t outer_input[sizeof(o_key_pad) + sizeof(inner_hash)], hmac_result[SHA256_BLOCK_SIZE] = {0};
+
+    ft_memcpy(outer_input, o_key_pad, sizeof(o_key_pad));
+    ft_memcpy(outer_input + sizeof(o_key_pad), inner_hash, sizeof(inner_hash));
+
+    if (mini_sha256(hmac_result, outer_input, sizeof(outer_input)) == -1) {
+        return -1;
+    }
+
+    ft_memcpy(dest, hmac_result, SHA256_BLOCK_SIZE);
+
+    return 0;
+}
+
+static int pbkdf2_sha256(uint8_t *key, const uint8_t *password, const size_t password_len, const uint8_t *salt, size_t salt_len) {
+    const uint32_t blockn = 1;
+    uint8_t block[salt_len + 4];
+    uint8_t U[32] = {0}, U_tmp[32] = {0}, T[32] = {0};
+    uint8_t secret[64] = {0};
+
+
+    if (password_len > BLOCK_SIZE) {
+        if (mini_sha256(secret, password, password_len) == -1) {
+            return -1;
+        }
+    } else {
+        ft_memcpy(secret, password, password_len);
+    }
+
+    ft_memcpy(block, salt, salt_len);
+    ft_memcpy(block + salt_len, &blockn, 4);
+
+    if (hmac(U, secret, block, salt_len + 4) == -1) {
+        return -1;
+    }
+
+    ft_memcpy(T, U, 32);
+
+    for (int i = 1; i < ITERATIONS; ++i) {
+        ft_memcpy(U_tmp, U, 32);
+        if (hmac(U, secret, U_tmp, 32) == -1) {
+            return -1;
+        }
+
+        for (int ti = 0; ti < 32; ++ti) {
+            T[ti] ^= U[ti];
+        }
+    }
+
+    ft_memcpy(key, T, 8);
+
+    return 0;
+}
+
+
+int gen_key(uint8_t *key, const char *password, uint64_t password_len, const uint8_t *salt, uint64_t salt_len) {
+    return pbkdf2_sha256(key, (const uint8_t *)password, password_len, salt, salt_len);
 }

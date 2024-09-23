@@ -59,6 +59,7 @@ int main(int argc, char **argv) {
         if (ssl.options & DE_ENCODE_IN_OUTPUT_BASE64_OPTION) {
             ft_dprintf(ssl.fd, "\n%s\n", ssl.output);
         } else {
+            ft_dprintf(ssl.fd, "\n");
             for (uint64_t i = 0; i < ssl.output_len; ++i) {
                 ft_dprintf(ssl.fd, "%x", ssl.output[i]);
             }

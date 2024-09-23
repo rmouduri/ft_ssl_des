@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <time.h>
 #include <bsd/readpassphrase.h> 
 
 #include "ft_ssl.h"
@@ -292,6 +293,8 @@ static uint8_t *get_iv(const char *ssl_iv) {
             iv[i] = 0;
         }
     } else {
+        time_t t;
+        srand((unsigned) time(&t));
         for (int i = 0; i < 8; ++i) {
             iv[i] = rand() % 256;
         }
@@ -321,6 +324,8 @@ static uint8_t *get_salt(const char *ssl_salt, uint64_t *salt_len) {
             salt[i] = 0;
         }
     } else {
+        time_t t;
+        srand((unsigned) time(&t));
         for (uint64_t i = 0; i < *salt_len; ++i) {
             salt[i] = rand() % 256;
         }
@@ -343,7 +348,7 @@ static char *get_password(const char *ssl_pwd, const char *key) {
             return NULL;
         }
 
-        ft_memcpy(pwd, ssl_pwd, len);
+        ft_memcpy(pwd, ssl_pwd, len + 1);
 
         return pwd;
     }
@@ -360,17 +365,6 @@ static char *get_password(const char *ssl_pwd, const char *key) {
     }
 
     return pwd;
-}
-
-static int gen_key(uint8_t *key, const char *password, uint64_t password_len, const uint8_t *salt, uint64_t salt_len) {
-
-
-    (void)key;
-    (void)password;
-    (void)password_len;
-    (void)salt;
-    (void)salt_len;
-    return -1;
 }
 
 static uint8_t *get_key(const char *ssl_key, const char *password, uint64_t password_len, const uint8_t *salt, uint64_t salt_len) {
@@ -466,10 +460,11 @@ uint8_t *ft_des(ssl_t *ssl) {
     }
 
     if (ssl->options & DISPLAY_KEY_IV_OPTION) {
-        ft_dprintf(ssl->fd, "key = ");
+        ft_dprintf(ssl->fd, "\nkey = ");
         for (int i = 0; i < 8; ++i) {
-            ft_dprintf(ssl->fd, "%x", des.key[i]);
+            ft_dprintf(ssl->fd, "%X", des.key[i]);
         }
+        ft_dprintf(ssl->fd, "%s\n", ft_base64((char *) des.key, 8, ENCODE_MODE_OPTION));
         ft_dprintf(ssl->fd, "\n");
         if (des.init_vector) {
             ft_dprintf(ssl->fd, "iv  = ");
@@ -481,7 +476,7 @@ uint8_t *ft_des(ssl_t *ssl) {
         if (des.salt) {
             ft_dprintf(ssl->fd, "salt= ");
             for (uint64_t i = 0; i < des.salt_len; ++i) {
-                ft_dprintf(ssl->fd, "%x", des.salt[i]);
+                ft_dprintf(ssl->fd, "%X", des.salt[i]);
             }
             ft_dprintf(ssl->fd, "\n");
         }
