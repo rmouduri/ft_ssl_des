@@ -56,9 +56,14 @@ int main(int argc, char **argv) {
             return 1;
         }
 
-        ft_dprintf(ssl.fd, "\n");
-        ft_binarydump(ssl.output, ssl.output_len, ssl.fd);
-        ft_hexdump(ssl.output, ssl.output_len, ssl.fd);
+        if (ssl.options & DE_ENCODE_IN_OUTPUT_BASE64_OPTION) {
+            ft_dprintf(ssl.fd, "\n%s\n", ssl.output);
+        } else {
+            for (uint64_t i = 0; i < ssl.output_len; ++i) {
+                ft_dprintf(ssl.fd, "%x", ssl.output[i]);
+            }
+            ft_dprintf(ssl.fd, "\n");
+        }
     }
 
     free_ssl(&ssl);

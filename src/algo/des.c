@@ -186,7 +186,6 @@ static uint8_t *des_encrypt(ft_des_t *des) {
 
     return des->output;
 }
-    #include "display.h"
 
 static uint8_t *des_decrypt(ft_des_t *des) {
     uint8_t block[8] = {0};
@@ -212,7 +211,7 @@ static uint8_t *des_decrypt(ft_des_t *des) {
         permutation(block, block, sizeof(block) * 8, iibp_table);
 
         if (des->algo == DES || des->algo == DES_CBC) {
-            const uint8_t *xor = block_index ? des->padded_input : des->init_vector;
+            const uint8_t *xor = block_index ? des->padded_input + (block_index - 8) : des->init_vector;
 
             for (int i = 0; i < 8; ++i) {
                 block[i] ^= xor[i];
@@ -227,6 +226,7 @@ static uint8_t *des_decrypt(ft_des_t *des) {
     }
 
     des->output_len -= des->output[des->output_len - 1];
+    des->output[des->output_len] = 0;
     return des->output;
 }
 

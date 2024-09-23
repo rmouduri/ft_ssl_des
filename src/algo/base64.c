@@ -124,5 +124,6 @@ char *ft_base64(const char *input, const size_t input_len, const ssl_base64_opti
         encode((uint8_t *) input, input_len, output);
     }
 
+    // ft_dprintf(1, "b64 in: %d, out len = %d\n", input_len,  output_len);
     return output;
 }
