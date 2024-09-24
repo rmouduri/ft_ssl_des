@@ -29,3 +29,11 @@ void print_read_error(const char *function) {
 void print_encode_decode_error(void) {
     write(STDERR_FILENO, FT_SSL_BASE64_ENCODE_DECODE_ERROR, ft_strlen(FT_SSL_BASE64_ENCODE_DECODE_ERROR));
 }
+
+void print_hex_string_too_short(void) {
+    write(STDERR_FILENO, FT_SSL_DES_HEX_STRING_TOO_SHORT, ft_strlen(FT_SSL_DES_HEX_STRING_TOO_SHORT));
+}
+
+void print_hex_string_too_long(void) {
+    write(STDERR_FILENO, FT_SSL_DES_HEX_STRING_TOO_LONG, ft_strlen(FT_SSL_DES_HEX_STRING_TOO_LONG));
+}

@@ -1,6 +1,7 @@
 #include "ft_ssl.h"
 #include "ft_sha256.h"
 #include "des.h"
+#include "display.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -173,9 +174,9 @@ static int hmac(uint8_t *dest, const uint8_t *secret, const uint8_t *msg, size_t
     return 0;
 }
 
-static int pbkdf2_sha256(uint8_t *key, const uint8_t *password, const size_t password_len, const uint8_t *salt, size_t salt_len) {
-    const uint32_t blockn = 1;
-    uint8_t block[salt_len + 4];
+static int pbkdf2_sha256(uint8_t *key, const uint8_t *password, const size_t password_len, const uint8_t *salt) {
+    const int blockn = 1;
+    uint8_t block[SALT_LEN + sizeof(blockn)] = {0};
     uint8_t U[32] = {0}, U_tmp[32] = {0}, T[32] = {0};
     uint8_t secret[64] = {0};
 
@@ -188,10 +189,13 @@ static int pbkdf2_sha256(uint8_t *key, const uint8_t *password, const size_t pas
         ft_memcpy(secret, password, password_len);
     }
 
-    ft_memcpy(block, salt, salt_len);
-    ft_memcpy(block + salt_len, &blockn, 4);
+    ft_memcpy(block, salt, SALT_LEN);
+    // Big endian size
+    for (int i = 0; i < 4; ++i) {
+        block[SALT_LEN + i] = (blockn >> (24 - (8 * i))) & 0xff;
+    }
 
-    if (hmac(U, secret, block, salt_len + 4) == -1) {
+    if (hmac(U, secret, block, SALT_LEN + sizeof(blockn)) == -1) {
         return -1;
     }
 
@@ -208,12 +212,12 @@ static int pbkdf2_sha256(uint8_t *key, const uint8_t *password, const size_t pas
         }
     }
 
-    ft_memcpy(key, T, 8);
+    ft_memcpy(key, T, 16);
 
     return 0;
 }
 
 
-int gen_key(uint8_t *key, const char *password, uint64_t password_len, const uint8_t *salt, uint64_t salt_len) {
-    return pbkdf2_sha256(key, (const uint8_t *)password, password_len, salt, salt_len);
+int gen_key(uint8_t *key, const char *password, uint64_t password_len, const uint8_t *salt) {
+    return pbkdf2_sha256(key, (const uint8_t *)password, password_len, salt);
 }

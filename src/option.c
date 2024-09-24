@@ -249,6 +249,7 @@ int check_des_options(int argc, char **argv, ssl_t *ssl) {
             }
             close(fd);
         } else if (ft_strcmp(OUTPUT_FILE_ARG, argv[i]) == 0) {
+            if (ssl->fd != STDIN_FILENO) { close(ssl->fd); }
             if (i + 1 >= argc || (ssl->fd = open(argv[++i], O_WRONLY | O_CREAT, 0666)) == -1) {
                 free_ssl(ssl);
                 return -1;
@@ -256,24 +257,28 @@ int check_des_options(int argc, char **argv, ssl_t *ssl) {
         } else if (ft_strcmp(KEY_HEX_ARG, argv[i]) == 0) {
             if (i + 1 >= argc) {
                 write(STDERR_FILENO, "Missing hex key argument.\n", ft_strlen("Missing hex key argument.\n")); 
+                free_ssl(ssl);
                 return -1;
             }
             ssl->key = argv[++i];
         } else if (ft_strcmp(PASSWORD_ASCII_ARG, argv[i]) == 0) {
             if (i + 1 >= argc) {
                 write(STDERR_FILENO, "Missing password argument.\n", ft_strlen("Missing password argument.\n")); 
+                free_ssl(ssl);
                 return -1;
             }
             ssl->password = argv[++i];
         } else if (ft_strcmp(SALT_HEX_ARG, argv[i]) == 0) {
             if (i + 1 >= argc) {
                 write(STDERR_FILENO, "Missing hex salt argument.\n", ft_strlen("Missing hex salt argument.\n")); 
+                free_ssl(ssl);
                 return -1;
             }
             ssl->salt = argv[++i];
         } else if (ft_strcmp(INIT_VECTOR_HEX_ARG, argv[i]) == 0) {
             if (i + 1 >= argc) {
                 write(STDERR_FILENO, "Missing hex initialization vector argument.\n", ft_strlen("Missing hex initialization vector argument.\n")); 
+                free_ssl(ssl);
                 return -1;
             }
             ssl->init_vector = argv[++i];

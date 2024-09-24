@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
             ft_dprintf(ssl.fd, "%s\n", ssl.output);
         } else {
             for (uint64_t i = 0; i < ssl.output_len; ++i) {
-                ft_dprintf(ssl.fd, "%x", ssl.output[i]);
+                ft_dprintf(ssl.fd, "%0x", ssl.output[i]);
             }
             ft_dprintf(ssl.fd, "\n");
         }

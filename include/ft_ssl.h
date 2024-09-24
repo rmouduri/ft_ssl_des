@@ -53,6 +53,8 @@
                         "Flags:\n" \
                         "-p -q -r -s\n"
 # define FT_SSL_BASE64_ENCODE_DECODE_ERROR  "Please choose between encode (-e) or decode (-d).\n"
+# define FT_SSL_DES_HEX_STRING_TOO_SHORT  "hex string is too short, padding with zero bytes to length\n"
+# define FT_SSL_DES_HEX_STRING_TOO_LONG  "hex string is too long, ignoring excess\n"
 
 
 # define ALGO_STRING { \
@@ -137,6 +139,8 @@ void print_command_error(const char *command);
 void print_malloc_error(const char *function);
 void print_read_error(const char *function);
 void print_encode_decode_error(void);
+void print_hex_string_too_short(void);
+void print_hex_string_too_long(void);
 
 /* utils.c */
 void    *ft_memcpy(void *dest, const void *src, size_t n);
