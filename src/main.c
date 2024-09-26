@@ -40,14 +40,14 @@ int main(int argc, char **argv) {
                 }
             }
 
-            display(tmp, ssl.algo, ssl.options, ssl.fd);
+            display_md5_sha256(tmp, ssl.algo, ssl.options, ssl.fd);
             tmp = tmp->next;
         }
     } else if (ssl.algo == BASE64) {
         char *output = ft_base64(ssl.message, ssl.message_len, ssl.options);
 
         if (output) {
-            ft_dprintf(ssl.fd, "%s", output);
+            display_base64(ssl.fd, output, ft_strlen(output));
             free(output);
         }
     } else if (ssl.algo == DES || ssl.algo == DES_ECB || ssl.algo == DES_CBC) {
@@ -57,12 +57,9 @@ int main(int argc, char **argv) {
         }
 
         if (ssl.options & DE_ENCODE_IN_OUTPUT_BASE64_OPTION) {
-            ft_dprintf(ssl.fd, "%s\n", ssl.output);
+            display_base64(ssl.fd, (char *) ssl.output, ssl.output_len);
         } else {
-            for (uint64_t i = 0; i < ssl.output_len; ++i) {
-                ft_dprintf(ssl.fd, "%0x", ssl.output[i]);
-            }
-            ft_dprintf(ssl.fd, "\n");
+            write(ssl.fd, ssl.output, ssl.output_len);
         }
     }
 

@@ -153,7 +153,7 @@ static void display_stdin_input(const ssl_input_t *input, ssl_encrypt_algo_t alg
     ft_dprintf(fd, "\n");
 }
 
-void display(const ssl_input_t *input, ssl_encrypt_algo_t algo, ssl_option_t options, int fd) {
+void display_md5_sha256(const ssl_input_t *input, ssl_encrypt_algo_t algo, ssl_option_t options, int fd) {
     if (input->type == FILE_INPUT && input->ssl_str == NULL && input->len == 1) {
         ft_dprintf(fd, SSL_NO_FILE_DIRECTORY, input->ssl_arg);
         return ;
@@ -165,5 +165,11 @@ void display(const ssl_input_t *input, ssl_encrypt_algo_t algo, ssl_option_t opt
         display_file_input(input, algo, options, fd);
     } else if (input->type == STDIN_INPUT) {
         display_stdin_input(input, algo, options, fd);
+    }
+}
+
+void display_base64(int fd, const char *s, uint64_t len) {
+    for (uint64_t i = 0; i < len; i += 64) {
+        ft_dprintf(fd, "%.64s\n", s + i);
     }
 }

@@ -203,7 +203,7 @@ int check_base64_options(int argc, char **argv, ssl_t *ssl) {
             }
             close(fd);
         } else if (ft_strcmp(OUTPUT_FILE_ARG, argv[i]) == 0) {
-            if (i + 1 >= argc || (ssl->fd = open(argv[++i], O_WRONLY | O_CREAT, 0666)) == -1) {
+            if (i + 1 >= argc || (ssl->fd = open(argv[++i], O_WRONLY | O_TRUNC | O_CREAT, 0666)) == -1) {
                 free_ssl(ssl);
                 return -1;
             }
@@ -250,7 +250,7 @@ int check_des_options(int argc, char **argv, ssl_t *ssl) {
             close(fd);
         } else if (ft_strcmp(OUTPUT_FILE_ARG, argv[i]) == 0) {
             if (ssl->fd != STDIN_FILENO) { close(ssl->fd); }
-            if (i + 1 >= argc || (ssl->fd = open(argv[++i], O_WRONLY | O_CREAT, 0666)) == -1) {
+            if (i + 1 >= argc || (ssl->fd = open(argv[++i], O_WRONLY | O_TRUNC | O_CREAT, 0666)) == -1) {
                 free_ssl(ssl);
                 return -1;
             }

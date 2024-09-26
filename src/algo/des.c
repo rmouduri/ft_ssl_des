@@ -240,33 +240,33 @@ static void check_hex_len(size_t len) {
 }
 
 static uint8_t *get_input(const char *input, size_t input_len, ssl_option_t options, uint64_t *len) {
-    uint8_t *output;
+    uint8_t *padded_input;
     uint8_t padding_len = 8 - input_len % 8;
 
     if (options & DECRYPT_MODE_OPTION && options & DE_ENCODE_IN_OUTPUT_BASE64_OPTION) {
-        if ((output = (uint8_t *) ft_base64(input, input_len, DECODE_MODE_OPTION)) == NULL) {
+        if ((padded_input = (uint8_t *) ft_base64(input, input_len, DECODE_MODE_OPTION)) == NULL) {
             return NULL;
         }
 
         *len = ((input_len / 4) * 3);
         *len -= *len % 8;
-        return output;
+        return padded_input;
     }
 
-    if ((output = malloc(sizeof(uint8_t) * (input_len + padding_len + 1))) == NULL) {
+    if ((padded_input = malloc(sizeof(uint8_t) * (input_len + padding_len + 1))) == NULL) {
         print_malloc_error("get_input");
         return NULL;
     }
 
-    ft_memcpy(output, input, input_len);
+    ft_memcpy(padded_input, input, input_len);
 
     for (uint8_t i = 0; i < padding_len; ++i) {
-        output[input_len + i] = padding_len;
+        padded_input[input_len + i] = padding_len;
     }
 
-    output[input_len + padding_len] = 0;
+    padded_input[input_len + padding_len] = 0;
     *len = input_len + padding_len;
-    return output;
+    return padded_input;
 }
 
 static uint8_t get_hex_val(uint8_t hex) {
@@ -468,10 +468,14 @@ void free_des(ft_des_t *des, uint8_t free_output) {
 }
 
 uint8_t *ft_des(ssl_t *ssl) {
+    if (ssl->key && !ssl->init_vector) {
+        ft_dprintf(STDERR_FILENO, "iv undefined\n");
+        return NULL;
+    }
+
     ft_des_t des = {
         .algo           = ssl->algo,
         .padded_input   = get_input(ssl->message, ssl->message_len, ssl->options, &des.p_input_len),
-        // .p_input_len    = des.p_input_len,
         .password       = ssl->key ? NULL : get_password(ssl->password, ssl->key),
         .salt           = get_salt(ssl->salt),
         .key            = get_key(ssl->key, des.password, ft_strlen(des.password), des.salt),
@@ -486,22 +490,26 @@ uint8_t *ft_des(ssl_t *ssl) {
         return NULL;
     }
 
+    if (ssl->init_vector && (ssl->algo != DES && ssl->algo != DES_CBC)) {
+        ft_dprintf(STDERR_FILENO, "warning: iv not used by this cipher\n");
+    }
+
     if (ssl->options & DISPLAY_KEY_IV_OPTION) {
-        ft_dprintf(ssl->fd, "salt=");
+        ft_dprintf(STDIN_FILENO, "salt=");
         for (uint64_t i = 0; i < SALT_LEN; ++i) {
-            ft_dprintf(ssl->fd, "%02X", des.salt ? des.salt[i] : 0);
+            ft_dprintf(STDIN_FILENO, "%02X", des.salt ? des.salt[i] : 0);
         }
-        ft_dprintf(ssl->fd, "\nkey=");
+        ft_dprintf(STDIN_FILENO, "\nkey=");
         for (int i = 0; i < 8; ++i) {
-            ft_dprintf(ssl->fd, "%02X", des.key[i]);
+            ft_dprintf(STDIN_FILENO, "%02X", des.key[i]);
         }
-        ft_dprintf(ssl->fd, "\n");
+        ft_dprintf(STDIN_FILENO, "\n");
         if (des.init_vector) {
-            ft_dprintf(ssl->fd, "iv =");
+            ft_dprintf(STDIN_FILENO, "iv =");
             for (int i = 0; i < 8; ++i) {
-                ft_dprintf(ssl->fd, "%02X", des.init_vector[i]);
+                ft_dprintf(STDIN_FILENO, "%02X", des.init_vector[i]);
             }
-            ft_dprintf(ssl->fd, "\n");
+            ft_dprintf(STDIN_FILENO, "\n");
         }
     }
 
@@ -531,6 +539,21 @@ uint8_t *ft_des(ssl_t *ssl) {
         free(ssl->output);
         ssl->output = tmp;
         ssl->output_len = ft_strlen((char *) ssl->output);
+    } else if (!ssl->salt) {
+        uint8_t *tmp = NULL;
+
+        if ((tmp = malloc(sizeof(uint8_t) * (des.output_len + 16))) == NULL) {
+            free_des(&des, 1);
+            return NULL;
+        }
+
+        ft_memcpy(tmp, "Salted__", 8);
+        ft_memcpy(tmp + 8, des.salt, 8);
+        ft_memcpy(tmp + 16, des.output, des.output_len);
+
+        free(des.output);
+        ssl->output = tmp;
+        ssl->output_len = des.output_len + 16;
     }
 
     free_des(&des, 0);
