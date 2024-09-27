@@ -102,14 +102,45 @@ static void encode(const uint8_t *input, const size_t input_len, char *output) {
     output[output_index] = 0;
 }
 
-char *ft_base64(const char *input, size_t input_len, const ssl_base64_option_t options) {
-    while (input_len && input[input_len - 1] == '\n') --input_len;
+char *get_input(const char *src, const size_t src_len, const ssl_base64_option_t options, size_t *input_len) {
+    char *input = NULL;
+
+    *input_len = src_len;
+    if (options & DECODE_MODE_OPTION) {
+        for (size_t i = 0; i < src_len; ++i) {
+            if (src[i] == '\n') --(*input_len);
+        }
+    }
+
+    if ((input = malloc(sizeof(char) * (*input_len + 1))) == NULL) {
+        print_malloc_error("get_input");
+        return NULL;
+    }
+
+    for (size_t srci = 0, i = 0; srci < src_len; ++srci) {
+        if ((options & DECODE_MODE_OPTION) && src[srci] == '\n') continue;
+
+        input[i++] = src[srci];
+    }
+
+    return input;
+}
+
+char *ft_base64(const char *og_input, const size_t og_input_len, const ssl_base64_option_t options) {
+    size_t input_len = 0;
+    char *input = get_input(og_input, og_input_len, options, &input_len);
+
+    if (input == NULL) {
+        print_malloc_error("ft_base64");
+        return NULL;
+    }
 
     const size_t output_len = options & DECODE_MODE_OPTION ? ((input_len / 4) * 3) : (4 * ((input_len + 2) / 3));
     char *output = malloc(sizeof(char) * (output_len + 1));
 
     if (output == NULL) {
         print_malloc_error("ft_base64");
+        free(input);
         return NULL;
     }
 
@@ -121,5 +152,6 @@ char *ft_base64(const char *input, size_t input_len, const ssl_base64_option_t o
         encode((uint8_t *) input, input_len, output);
     }
 
+    free(input);
     return output;
 }
