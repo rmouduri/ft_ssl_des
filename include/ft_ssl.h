@@ -90,7 +90,7 @@ typedef enum ssl_des_option_e {
     DE_ENCODE_IN_OUTPUT_BASE64_OPTION   = 1 << 0,
     DECRYPT_MODE_OPTION                 = 1 << 1,
     ENCRYPT_MODE_OPTION                 = 1 << 2,
-    DISPLAY_KEY_IV_OPTION                 = 1 << 3
+    DISPLAY_KEY_IV_SALT_OPTION          = 1 << 3
 } ssl_des_option_t;
 
 typedef enum ssl_input_type_e {

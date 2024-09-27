@@ -238,7 +238,7 @@ int check_des_options(int argc, char **argv, ssl_t *ssl) {
         } else if (ft_strcmp(ENCRYPT_MODE_ARG, argv[i]) == 0) {
             ssl->options |= ENCRYPT_MODE_OPTION;
         } else if (ft_strcmp(DISPLAY_KEY_IV_ARG, argv[i]) == 0) {
-            ssl->options |= DISPLAY_KEY_IV_OPTION;
+            ssl->options |= DISPLAY_KEY_IV_SALT_OPTION;
         } else if (ft_strcmp(INPUT_MESSAGE_FILE_ARG, argv[i]) == 0) {
             int fd;
             if (i + 1 >= argc

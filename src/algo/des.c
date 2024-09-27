@@ -494,22 +494,22 @@ uint8_t *ft_des(ssl_t *ssl) {
         ft_dprintf(STDERR_FILENO, "warning: iv not used by this cipher\n");
     }
 
-    if (ssl->options & DISPLAY_KEY_IV_OPTION) {
-        ft_dprintf(STDIN_FILENO, "salt=");
+    if (ssl->options & DISPLAY_KEY_IV_SALT_OPTION) {
+        ft_dprintf(STDOUT_FILENO, "salt=");
         for (uint64_t i = 0; i < SALT_LEN; ++i) {
-            ft_dprintf(STDIN_FILENO, "%02X", des.salt ? des.salt[i] : 0);
+            ft_dprintf(STDOUT_FILENO, "%02X", des.salt ? des.salt[i] : 0);
         }
-        ft_dprintf(STDIN_FILENO, "\nkey=");
+        ft_dprintf(STDOUT_FILENO, "\nkey=");
         for (int i = 0; i < 8; ++i) {
-            ft_dprintf(STDIN_FILENO, "%02X", des.key[i]);
+            ft_dprintf(STDOUT_FILENO, "%02X", des.key[i]);
         }
-        ft_dprintf(STDIN_FILENO, "\n");
+        ft_dprintf(STDOUT_FILENO, "\n");
         if (des.init_vector) {
-            ft_dprintf(STDIN_FILENO, "iv =");
+            ft_dprintf(STDOUT_FILENO, "iv =");
             for (int i = 0; i < 8; ++i) {
-                ft_dprintf(STDIN_FILENO, "%02X", des.init_vector[i]);
+                ft_dprintf(STDOUT_FILENO, "%02X", des.init_vector[i]);
             }
-            ft_dprintf(STDIN_FILENO, "\n");
+            ft_dprintf(STDOUT_FILENO, "\n");
         }
     }
 
