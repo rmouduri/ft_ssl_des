@@ -518,7 +518,7 @@ uint8_t *ft_des(ssl_t *ssl) {
             free_des(&des, 1);
             return NULL;
         }
-    } else {
+    } else if (ssl->options & ENCRYPT_MODE_OPTION) {
         if (des_encrypt(&des) == NULL) {
             free_des(&des, 1);
             return NULL;
@@ -539,7 +539,7 @@ uint8_t *ft_des(ssl_t *ssl) {
         free(ssl->output);
         ssl->output = tmp;
         ssl->output_len = ft_strlen((char *) ssl->output);
-    } else if (!ssl->salt && !ssl->key) {
+    } else if (!ssl->salt && !ssl->key && (ssl->options & ENCRYPT_MODE_OPTION)) {
         uint8_t *tmp = NULL;
 
         if ((tmp = malloc(sizeof(uint8_t) * (des.output_len + 16))) == NULL) {
