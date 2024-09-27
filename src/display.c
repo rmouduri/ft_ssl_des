@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include "ft_ssl.h"
 #include "display.h"
@@ -168,8 +169,15 @@ void display_md5_sha256(const ssl_input_t *input, ssl_encrypt_algo_t algo, ssl_o
     }
 }
 
-void display_base64(int fd, const char *s, uint64_t len) {
-    for (uint64_t i = 0; i < len; i += 64) {
-        ft_dprintf(fd, "%.64s\n", s + i);
+void display_base64(int fd, const char *s, uint64_t len, bool decode) {
+    if (decode) {
+        for (uint64_t i = 0; i < len; ++i) {
+            write(fd, s + i, 1);
+        }
+    } else {
+        for (uint64_t i = 0; i < len; i += 64) {
+            ft_dprintf(fd, "%.64s\n", s + i);
+        }
     }
+
 }

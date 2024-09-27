@@ -16,32 +16,32 @@ static int8_t base64_char_value(char c) {
     return -1;
 }
 
-static bool is_base64_char(char c) {
-    return (c >= 'A' && c <= 'Z') || 
-           (c >= 'a' && c <= 'z') || 
-           (c >= '0' && c <= '9') || 
-           (c == '+') || (c == '/');
-}
+// static bool is_base64_char(char c) {
+//     return (c >= 'A' && c <= 'Z') || 
+//            (c >= 'a' && c <= 'z') || 
+//            (c >= '0' && c <= '9') || 
+//            (c == '+') || (c == '/');
+// }
 
-static bool is_valid_base64(const char *input, size_t input_len) {
-    if (input_len % 4 != 0) {
-        return false;
-    }
+// static bool is_valid_base64(const char *input, size_t input_len) {
+//     if (input_len % 4 != 0) {
+//         return false;
+//     }
 
-    for (size_t i = 0; i < input_len; i++) {
-        if (i < input_len - 2) {
-            if (!is_base64_char(input[i])) {
-                return false;
-            }
-        } else {
-            if (input[i] != '=' && !is_base64_char(input[i])) {
-                return false;
-            }
-        }
-    }
+//     for (size_t i = 0; i < input_len; i++) {
+//         if (i < input_len - 2) {
+//             if (!is_base64_char(input[i])) {
+//                 return false;
+//             }
+//         } else {
+//             if (input[i] != '=' && !is_base64_char(input[i])) {
+//                 return false;
+//             }
+//         }
+//     }
 
-    return true;
-}
+//     return true;
+// }
 
 static void decode(const uint8_t *input, const size_t input_len, char *output) {
     uint8_t char_4set[4];
@@ -102,7 +102,9 @@ static void encode(const uint8_t *input, const size_t input_len, char *output) {
     output[output_index] = 0;
 }
 
-char *ft_base64(const char *input, const size_t input_len, const ssl_base64_option_t options) {
+char *ft_base64(const char *input, size_t input_len, const ssl_base64_option_t options) {
+    while (input_len && input[input_len - 1] == '\n') --input_len;
+
     const size_t output_len = options & DECODE_MODE_OPTION ? ((input_len / 4) * 3) : (4 * ((input_len + 2) / 3));
     char *output = malloc(sizeof(char) * (output_len + 1));
 
@@ -114,16 +116,10 @@ char *ft_base64(const char *input, const size_t input_len, const ssl_base64_opti
     ft_memset(output, 0, output_len);
 
     if (options & DECODE_MODE_OPTION) {
-        if (!is_valid_base64(input, input_len)) {
-            ft_dprintf(STDERR_FILENO, "Invalid base64 input.\n");
-            free(output);
-            return NULL;
-        }
         decode((uint8_t *) input, input_len, output);
     } else {
         encode((uint8_t *) input, input_len, output);
     }
 
-    // ft_dprintf(1, "b64 in: %d, out len = %d\n", input_len,  output_len);
     return output;
 }
