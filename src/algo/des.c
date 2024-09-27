@@ -468,7 +468,7 @@ void free_des(ft_des_t *des, uint8_t free_output) {
 }
 
 uint8_t *ft_des(ssl_t *ssl) {
-    if (ssl->key && !ssl->init_vector) {
+    if ((ssl->algo == DES || ssl->algo == DES_CBC) && ssl->key && !ssl->init_vector) {
         ft_dprintf(STDERR_FILENO, "iv undefined\n");
         return NULL;
     }
@@ -539,7 +539,7 @@ uint8_t *ft_des(ssl_t *ssl) {
         free(ssl->output);
         ssl->output = tmp;
         ssl->output_len = ft_strlen((char *) ssl->output);
-    } else if (!ssl->salt) {
+    } else if (!ssl->salt && !ssl->key) {
         uint8_t *tmp = NULL;
 
         if ((tmp = malloc(sizeof(uint8_t) * (des.output_len + 16))) == NULL) {
