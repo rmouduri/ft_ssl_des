@@ -218,6 +218,6 @@ static int pbkdf2_sha256(uint8_t *key, const uint8_t *password, const size_t pas
 }
 
 
-int gen_key(uint8_t *key, const char *password, uint64_t password_len, const uint8_t *salt) {
-    return pbkdf2_sha256(key, (const uint8_t *)password, password_len, salt);
+int gen_key(uint8_t *key, const char *password, const uint8_t *salt) {
+    return pbkdf2_sha256(key, (const uint8_t *)password, ft_strlen(password), salt);
 }

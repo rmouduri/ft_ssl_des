@@ -144,14 +144,16 @@ void print_hex_string_too_long(void);
 
 /* utils.c */
 void    *ft_memcpy(void *dest, const void *src, size_t n);
+int     ft_memcmp(const void *s1, const void *s2, size_t n);
 void    *ft_memset(void *s, int c, size_t n);
 int     ft_strcmp(const char *s1, const char *s2);
+int     ft_strncmp(const char *s1, const char *s2, const size_t n);
 void    free_ssl(ssl_t *ssl);
 
 /* algorithms */
 uint8_t *ft_md5(const uint8_t *input, const size_t input_len);
 uint8_t *ft_sha256(const uint8_t *input, const size_t input_len);
-char    *ft_base64(const char *input, const size_t input_len, ssl_base64_option_t options);
+char    *ft_base64(const char *input, const size_t input_len, ssl_base64_option_t options, size_t *output_len);
 uint8_t *ft_des(ssl_t *ssl);
 
 #endif // _FT_SSL_

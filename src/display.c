@@ -13,6 +13,7 @@ void ft_hexdump(const void *ptr, int size, int fd) {
         ft_dprintf(fd, "%08x  ", i);
 
         for (j = 0; j < 16; j++) {
+            if (j == 8) ft_dprintf(fd, " ");
             if (i + j < size) {
                 ft_dprintf(fd, "%02x ", buffer[i + j]);
             } else {
@@ -20,7 +21,7 @@ void ft_hexdump(const void *ptr, int size, int fd) {
             }
         }
 
-        ft_dprintf(fd, " ");
+        ft_dprintf(fd, " |");
 
         for (j = 0; j < 16; j++) {
             if (i + j < size) {
@@ -33,7 +34,7 @@ void ft_hexdump(const void *ptr, int size, int fd) {
             }
         }
 
-        ft_dprintf(fd, "\n");
+        ft_dprintf(fd, "|\n");
     }
 }
 
@@ -169,7 +170,7 @@ void display_md5_sha256(const ssl_input_t *input, ssl_encrypt_algo_t algo, ssl_o
     }
 }
 
-void display_base64(int fd, const char *s, uint64_t len, bool decode) {
+void display_base64(int fd, const uint8_t *s, uint64_t len, bool decode) {
     if (decode) {
         for (uint64_t i = 0; i < len; ++i) {
             write(fd, s + i, 1);

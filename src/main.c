@@ -44,10 +44,11 @@ int main(int argc, char **argv) {
             tmp = tmp->next;
         }
     } else if (ssl.algo == BASE64) {
-        char *output = ft_base64(ssl.message, ssl.message_len, ssl.options);
+        size_t output_len = 0;
+        char *output = ft_base64(ssl.message, ssl.message_len, ssl.options, &output_len);
 
         if (output) {
-            display_base64(ssl.fd, output, ft_strlen(output), ssl.options & DECODE_MODE_OPTION);
+            display_base64(ssl.fd, (uint8_t *) output, output_len, ssl.options & DECODE_MODE_OPTION);
             free(output);
         }
     } else if (ssl.algo == DES || ssl.algo == DES_ECB || ssl.algo == DES_CBC) {
@@ -57,7 +58,7 @@ int main(int argc, char **argv) {
         }
 
         if (ssl.options & DE_ENCODE_IN_OUTPUT_BASE64_OPTION) {
-            display_base64(ssl.fd, (char *) ssl.output, ssl.output_len, ssl.options & DECRYPT_MODE_OPTION);
+            display_base64(ssl.fd, ssl.output, ssl.output_len, ssl.options & DECRYPT_MODE_OPTION);
         } else {
             write(ssl.fd, ssl.output, ssl.output_len);
         }

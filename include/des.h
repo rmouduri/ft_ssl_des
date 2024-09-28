@@ -112,21 +112,22 @@
     22, 11,  4, 25 \
 }
 
-# define SALT_LEN   8
+# define SALT_LEN       8
+# define SALTED__STR    "Salted__"
 
 typedef struct ft_des_s {
     ssl_encrypt_algo_t  algo;
-    uint8_t     *padded_input;
-    uint64_t    p_input_len;
+    uint8_t     *input;
+    uint64_t    input_len;
     char        *password;
-    uint8_t     *salt;
-    uint64_t    salt_len;
-    uint8_t     *key;
-    uint8_t     *init_vector;
+    uint8_t     salt[8];
+    uint8_t     key16[16];
+    uint8_t     key[8];
+    uint8_t     init_vector[8];
     uint8_t     *output;
     uint64_t     output_len;
 } ft_des_t;
 
-int gen_key(uint8_t *key, const char *password, uint64_t password_len, const uint8_t *salt);
+int gen_key(uint8_t *key, const char *password, const uint8_t *salt);
 
 #endif // _DES_H_

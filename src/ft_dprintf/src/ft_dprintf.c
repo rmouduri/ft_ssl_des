@@ -48,7 +48,7 @@ static int	select_func(va_list val, t_inf inf, int printed_chars, int fd)
 	return (0);
 }
 
-static int	print_all(int fd, const char *s, va_list val)
+static int	print_all(const int fd, const char *s, va_list val)
 {
 	t_inf		infos;
 	int			printed_chars;

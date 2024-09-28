@@ -39,6 +39,31 @@ int	ft_strcmp(const char *s1, const char *s2) {
 	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
 }
 
+int	ft_strncmp(const char *s1, const char *s2, const size_t n) {
+	size_t	i;
+
+	i = 0;
+	while ((unsigned char)s1[i] && (unsigned char)s2[i] &&
+		(unsigned char)s1[i] == (unsigned char)s2[i] && i < n - 1)
+		++i;
+	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
+}
+
+int	ft_memcmp(const void *s1, const void *s2, size_t n) {
+	size_t				i;
+	const unsigned char	*s1cpy;
+	const unsigned char	*s2cpy;
+
+	if (n == 0)
+		return (0);
+	i = 0;
+	s1cpy = s1;
+	s2cpy = s2;
+	while ((unsigned char)s1cpy[i] == (unsigned char)s2cpy[i] && i < n - 1)
+		++i;
+	return ((unsigned char)s1cpy[i] - (unsigned char)s2cpy[i]);
+}
+
 static void free_ssl_inputs(ssl_input_t *ssl_inputs) {
     ssl_input_t *tmp;
 
@@ -61,7 +86,7 @@ static void free_ssl_inputs(ssl_input_t *ssl_inputs) {
 void free_ssl(ssl_t *ssl) {
 	free_ssl_inputs(ssl->ssl_inputs);
 
-	if (ssl->fd != -1 && ssl->fd != STDIN_FILENO) {
+	if (ssl->fd != -1 && ssl->fd != STDOUT_FILENO) {
 		close(ssl->fd);
 	}
 
