@@ -1,3 +1,8 @@
+<<<<<<< HEAD
 openssl() {
     $(which openssl) "$@" -provider legacy -provider default -pbkdf2
+=======
+openssl_des() {
+    openssl "$@" -provider legacy -provider default -pbkdf2
+>>>>>>> f1a08d42f7ed9af6e4446964d00a4a43fd5ec4ac
 }
