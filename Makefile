@@ -1,7 +1,7 @@
 NAME =		ft_ssl
 
 CC =		gcc
-CFLAGS =	-Wall -Werror -Wextra -Wunused -g3
+CFLAGS =	-Wall -Werror -Wextra -Wunused
 
 FT_DPRINTF_FOLDER	=	src/ft_dprintf
 INCLUDES =	-Iinclude -I$(FT_DPRINTF_FOLDER)/include

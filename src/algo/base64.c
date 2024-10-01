@@ -108,7 +108,7 @@ char *get_input(const char *src, const size_t src_len, const ssl_base64_option_t
     *input_len = src_len;
     if (options & DECODE_MODE_OPTION) {
         for (size_t i = 0; i < src_len; ++i) {
-            if (src[i] == '\n') --(*input_len);
+            if (src[i] == '\n' || src[i] == ' ') --(*input_len);
         }
     }
 
@@ -118,7 +118,7 @@ char *get_input(const char *src, const size_t src_len, const ssl_base64_option_t
     }
 
     for (size_t srci = 0, i = 0; srci < src_len; ++srci) {
-        if ((options & DECODE_MODE_OPTION) && src[srci] == '\n') continue;
+        if ((options & DECODE_MODE_OPTION) && (src[srci] == '\n' || src[srci] == ' ')) continue;
 
         input[i++] = src[srci];
     }

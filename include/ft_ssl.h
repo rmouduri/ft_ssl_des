@@ -43,15 +43,17 @@
 # define DISPLAY_KEY_IV_ARG             "-P"
 
 
-# define FT_SSL_HELP    "help\n"
 # define FT_SSL_USAGE   "usage: "FT_SSL" command [flags] [FILE_INPUT/string]\n"
 # define FT_SSL_INVALID_COMMAND_1   FT_SSL": Error: '"
-# define FT_SSL_INVALID_COMMAND_2   "' is an invalid command.\n\n" \
-                        "Commands:\n" \
+# define FT_SSL_INVALID_COMMAND_2   "' is an invalid command.\n\n"
+# define FT_SSL_HELP    "Standard commands:\n" \
                         MD5_COMMAND_ARG"\n" \
                         SHA256_COMMAND_ARG"\n\n" \
-                        "Flags:\n" \
-                        "-p -q -r -s\n"
+                        "Cipher commands:\n" \
+                        BASE64_COMMAND_ARG"\n" \
+                        DES_COMMAND_ARG"\n" \
+                        DES_CBC_COMMAND_ARG"\n" \
+                        DES_ECB_COMMAND_ARG"\n"
 # define FT_SSL_BASE64_ENCODE_DECODE_ERROR  "Please choose between encode (-e) or decode (-d).\n"
 # define FT_SSL_DES_HEX_STRING_TOO_SHORT  "hex string is too short, padding with zero bytes to length\n"
 # define FT_SSL_DES_HEX_STRING_TOO_LONG  "hex string is too long, ignoring excess\n"

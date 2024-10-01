@@ -1,0 +1,3 @@
+openssl() {
+    $(which openssl) "$@" -provider legacy -provider default -pbkdf2
+}

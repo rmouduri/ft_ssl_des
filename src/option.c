@@ -117,6 +117,7 @@ static int check_command(const char *command, ssl_t *ssl) {
         return -1;
     } else {
         print_command_error(command);
+        print_help();
         return -1;
     }
 
@@ -283,7 +284,10 @@ int check_des_options(int argc, char **argv, ssl_t *ssl) {
             }
             ssl->init_vector = argv[++i];
         } else {
-            break;
+            
+            ft_dprintf(STDERR_FILENO, "ft_ssl: Invalid option `%s'\n", argv[i]);
+            free_ssl(ssl);
+            return -1;
         }
 
         ++i;
