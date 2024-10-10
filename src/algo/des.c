@@ -229,6 +229,7 @@ static uint8_t *des_decrypt(ft_des_t *des) {
 
     if (des->output[des->output_len - 1] > 8) {
         ft_dprintf(STDERR_FILENO, "bad decrypt\n");
+        return NULL;
     } else {
         des->output_len -= des->output[des->output_len - 1];
     }
